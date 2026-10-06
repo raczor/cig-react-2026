@@ -2,6 +2,7 @@
 // Esta pantalla de bienvenida existe para confirmar que el entorno quedo bien
 // instalado. A partir de la sesion 2 se reemplaza por el panel de gestion.
 
+import TarjetaOrden from "./components/TarjetaOrden"; "./components/TarjetaOrden.jsx"
 import "./App.css";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       <h1 className="bienvenida__titulo">React para Frontend Profesional</h1>
 
       <p className="bienvenida__texto">
+        <TarjetaOrden />
         El entorno esta funcionando. Si ve esta pantalla, el proyecto quedo
         instalado correctamente y puede llegar a la primera sesion listo para
         programar.
