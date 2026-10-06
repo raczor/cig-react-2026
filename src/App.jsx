@@ -2,8 +2,8 @@
 // Esta pantalla de bienvenida existe para confirmar que el entorno quedo bien
 // instalado. A partir de la sesion 2 se reemplaza por el panel de gestion.
 
-import TarjetaOrden from "./components/TarjetaOrden"; "./components/TarjetaOrden.jsx"
 import "./App.css";
+import TarjetaOrden from "./components/TarjetaOrden.jsx";
 
 function App() {
   // Valor leido del archivo .env. Si aparece "no configurada", falta copiar
