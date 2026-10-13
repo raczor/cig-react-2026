@@ -2,9 +2,7 @@
    todos salen de las variables definidas en src/styles/variables.css */
 
 .tarjeta {
-    display: flex;
-    flex-direction: column;
-    padding: var(--espacio-2);
+    padding: var(--espacio-3);
     border: 1px solid var(--color-borde);
     border-radius: var(--radio);
     background-color: var(--color-superficie);
@@ -16,30 +14,26 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--espacio-1);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--espacio-1);
 }
 
 .tarjeta__codigo {
     margin: 0;
     font-family: var(--fuente-mono);
-    font-size: 0.85rem;
-    color: var(--color-texto-suave);
+    font-size: 1rem;
 }
 
 .tarjeta__cliente {
-    margin: 0 0 var(--espacio-1) 0;
-    font-size: 0.95rem;
+    margin: 0 0 var(--espacio-2) 0;
     font-weight: 600;
-    line-height: 1.3;
 }
 
 .tarjeta__datos {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0 var(--espacio-1);
-    margin: 0 0 var(--espacio-1) 0;
-    font-size: 0.78rem;
-    line-height: 1.5;
+    gap: 0.15rem var(--espacio-2);
+    margin: 0 0 var(--espacio-2) 0;
+    font-size: 0.85rem;
 }
 
 .tarjeta__datos dt {
@@ -52,23 +46,25 @@
 
 .tarjeta__aviso {
     margin: 0 0 var(--espacio-1) 0;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--color-aviso-texto);
 }
 
 .tarjeta__monto {
-    margin: auto 0 0 0;
-    padding-top: var(--espacio-1);
-    border-top: 1px solid var(--color-borde);
+    margin: 0;
     font-family: var(--fuente-mono);
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.1rem;
     text-align: right;
 }
 
+.tarjeta__acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--espacio-1);
+    margin-top: var(--espacio-2);
+}
+
 .tarjeta__boton {
-    align-self: flex-end;
-    margin-top: var(--espacio-1);
-    padding: 0.2rem var(--espacio-2);
+    padding: 0.25rem var(--espacio-2);
     font-size: 0.8rem;
 }

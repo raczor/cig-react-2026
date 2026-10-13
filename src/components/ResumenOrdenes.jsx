@@ -1,21 +1,29 @@
-// Resumen de las ordenes: recibe la lista por props y calcula los totales.
-// Los totales no se guardan en estado: se derivan de la lista en cada render.
-
-import Indicador from "./Indicador.jsx";
 import "./ResumenOrdenes.css";
 
-function ResumenOrdenes({ ordenes }) {
+// Todas las cifras se calculan a partir del arreglo recibido.
+// Ninguna esta escrita a mano: si cambian los datos, cambian los numeros.
+function ResumenOrdenes({ ordenes = [] }) {
+    const total = ordenes.length;
     const completadas = ordenes.filter((orden) => orden.estado === "completada").length;
     const pendientes = ordenes.filter((orden) => orden.estado === "pendiente").length;
-    const montoTotal = ordenes.reduce((suma, orden) => suma + orden.monto, 0);
+    const montoTotal = ordenes.reduce((acumulado, orden) => acumulado + orden.monto, 0);
+
+    const indicadores = [
+        { etiqueta: "Ordenes", valor: total },
+        { etiqueta: "Completadas", valor: completadas },
+        { etiqueta: "Pendientes", valor: pendientes },
+        { etiqueta: "Monto total", valor: "Q " + montoTotal.toLocaleString("es-GT") },
+    ];
 
     return (
-        <section className="resumen">
-            <Indicador valor={ordenes.length} etiqueta="Ordenes" />
-            <Indicador valor={completadas} etiqueta="Completadas" />
-            <Indicador valor={pendientes} etiqueta="Pendientes" />
-            <Indicador valor={`Q ${montoTotal.toLocaleString("es-GT")}`} etiqueta="Monto total" />
-        </section>
+        <div className="resumen">
+            {indicadores.map((indicador) => (
+                <div className="resumen__dato" key={indicador.etiqueta}>
+                    <p className="resumen__valor">{indicador.valor}</p>
+                    <p className="resumen__etiqueta">{indicador.etiqueta}</p>
+                </div>
+            ))}
+        </div>
     );
 }
 

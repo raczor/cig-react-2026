@@ -1,0 +1,7 @@
+/* Rejilla responsiva: las tarjetas se acomodan solas segun el ancho disponible. */
+
+.lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--espacio-2);
+}

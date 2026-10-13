@@ -1,0 +1,9 @@
+.panel {
+    margin-bottom: var(--espacio-4);
+}
+
+.panel__titulo {
+    margin-bottom: var(--espacio-2);
+    font-size: 1.15rem;
+    color: var(--color-texto-suave);
+}

@@ -1,0 +1,16 @@
+/* Tres controles en fila que se apilan solos en pantallas angostas. */
+
+.filtros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--espacio-2);
+    margin-bottom: var(--espacio-2);
+    padding: var(--espacio-2);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    background-color: var(--color-superficie);
+}
+
+.filtros .campo {
+    margin-bottom: 0;
+}

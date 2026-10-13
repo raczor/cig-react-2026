@@ -4,13 +4,13 @@ import "./TarjetaOrden.css";
 
 // Recibe UNA orden por props. No importa datos.js: por eso sigue sirviendo
 // cuando en la sesion 4 los datos lleguen por HTTP.
-function TarjetaOrden({ orden, moneda = "Q" }) {
-    // Desestructuracion: cada campo de la orden pasa a ser una constante.
-    const { codigo, cliente, nit, departamento, categoria, tecnico } = orden;
-    const { fecha, horas, monto, estado } = orden;
-
-    // Estado local: cada tarjeta recuerda si esta expandida, sin afectar a las demas.
+function TarjetaOrden({ orden, moneda = "Q", onCompletar }) {
+    // Estado LOCAL: solo esta tarjeta necesita saber si esta expandida.
     const [expandida, setExpandida] = useState(false);
+
+    // Desestructuracion: cada campo de la orden pasa a ser una constante.
+    const { id, codigo, cliente, nit, departamento, categoria, tecnico } = orden;
+    const { fecha, horas, monto, estado } = orden;
 
     // Valores derivados. Se calculan aqui, no se modifican sobre la prop.
     // El "T00:00:00" evita que la fecha se corra un dia por la zona horaria.
@@ -19,6 +19,7 @@ function TarjetaOrden({ orden, moneda = "Q" }) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
+    const puedeCompletar = estado === "pendiente" || estado === "en proceso";
 
     return (
         <article className="tarjeta">
@@ -36,8 +37,7 @@ function TarjetaOrden({ orden, moneda = "Q" }) {
                 <dd>{categoria}</dd>
                 <dt>Fecha</dt>
                 <dd>{fechaLocal}</dd>
-
-                {/* Los detalles solo se muestran cuando la tarjeta esta expandida. */}
+                {/* Renderizado condicional con el estado local */}
                 {expandida && (
                     <>
                         <dt>NIT</dt>
@@ -50,21 +50,33 @@ function TarjetaOrden({ orden, moneda = "Q" }) {
                 )}
             </dl>
 
-            {/* Renderizado condicional: la nota solo aparece si se cumple la condicion. */}
             {horas > 8 && <p className="tarjeta__aviso">Jornada extendida</p>}
 
             <p className="tarjeta__monto">
                 {moneda} {montoLocal}
             </p>
 
-            <button
-                type="button"
-                className="boton boton--secundario tarjeta__boton"
-                aria-expanded={expandida}
-                onClick={() => setExpandida((actual) => !actual)}
-            >
-                {expandida ? "Ver menos" : "Ver mas"}
-            </button>
+            <div className="tarjeta__acciones">
+                {/* Se pasa una funcion; no se llama aqui. */}
+                <button
+                    type="button"
+                    className="boton boton--secundario tarjeta__boton"
+                    onClick={() => setExpandida((valor) => !valor)}
+                >
+                    {expandida ? "Ver menos" : "Ver mas"}
+                </button>
+
+                {/* El hijo avisa al padre: llama a la funcion que recibio por props. */}
+                {onCompletar && puedeCompletar && (
+                    <button
+                        type="button"
+                        className="boton tarjeta__boton"
+                        onClick={() => onCompletar(id)}
+                    >
+                        Completar
+                    </button>
+                )}
+            </div>
         </article>
     );
 }
