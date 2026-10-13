@@ -1,0 +1,31 @@
+/* Estilos del resumen. Todos los valores salen de src/styles/variables.css */
+
+.resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--espacio-2);
+    margin: var(--espacio-4) 0;
+}
+
+.indicador {
+    padding: var(--espacio-2);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    background-color: var(--color-superficie);
+    box-shadow: var(--sombra);
+    text-align: center;
+}
+
+.indicador__valor {
+    margin: 0 0 var(--espacio-1) 0;
+    font-family: var(--fuente-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.indicador__etiqueta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-texto-suave);
+}

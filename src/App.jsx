@@ -4,6 +4,9 @@
 
 import "./App.css";
 import TarjetaOrden from "./components/TarjetaOrden.jsx";
+import EtiquetaEstado from "./components/EtiquetaEstado.jsx";
+import ResumenOrdenes from "./components/ResumenOrdenes.jsx";
+import { ordenes } from "../db.json";
 
 function App() {
   // Valor leido del archivo .env. Si aparece "no configurada", falta copiar
@@ -12,30 +15,22 @@ function App() {
 
   return (
     <div className="bienvenida">
+      
       <p className="bienvenida__etiqueta">Colegio de Ingenieros de Guatemala</p>
 
-      <h1 className="bienvenida__titulo">React para Frontend Profesional</h1>
+      <h1 className="bienvenida__titulo">Ordenes</h1>
 
-      <p className="bienvenida__texto">
-        <TarjetaOrden />
-        El entorno esta funcionando. Si ve esta pantalla, el proyecto quedo
-        instalado correctamente y puede llegar a la primera sesion listo para
-        programar.
-      </p>
+      <ResumenOrdenes ordenes={ordenes} />
 
-      <div className="bienvenida__tarjeta">
-        <h2 className="bienvenida__subtitulo">Verificacion del entorno</h2>
-        <dl className="bienvenida__lista">
-          <dt>Servidor de desarrollo</dt>
-          <dd>activo en el puerto 5173</dd>
-
-          <dt>Variable VITE_API_URL</dt>
-          <dd>{urlApi}</dd>
-
-          <dt>Backend local</dt>
-          <dd>se activa en la sesion 4 con npm run api</dd>
-        </dl>
-      </div>
+      {
+        ordenes.map((orden) => {
+          return <>
+            <div className="bienvenida__tarjeta">
+              <TarjetaOrden key={orden.id} orden={orden} />
+            </div>
+          </>
+        })
+      }      
 
       <p className="bienvenida__nota">
         Proyecto del curso: panel de gestion de ordenes de servicio de
