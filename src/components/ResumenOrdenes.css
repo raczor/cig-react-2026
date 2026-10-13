@@ -2,9 +2,8 @@
 
 .resumen {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: var(--espacio-2);
-    margin: var(--espacio-4) 0;
 }
 
 .indicador {

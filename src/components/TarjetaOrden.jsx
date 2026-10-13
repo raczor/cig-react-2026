@@ -6,9 +6,11 @@ import "./TarjetaOrden.css";
 // cuando en la sesion 4 los datos lleguen por HTTP.
 function TarjetaOrden({ orden, moneda = "Q" }) {
     // Desestructuracion: cada campo de la orden pasa a ser una constante.
-    const { codigo, cliente, departamento, categoria, tecnico } = orden;
+    const { codigo, cliente, nit, departamento, categoria, tecnico } = orden;
     const { fecha, horas, monto, estado } = orden;
 
+    // Estado local: cada tarjeta recuerda si esta expandida, sin afectar a las demas.
+    const [expandida, setExpandida] = useState(false);
 
     // Valores derivados. Se calculan aqui, no se modifican sobre la prop.
     // El "T00:00:00" evita que la fecha se corra un dia por la zona horaria.
@@ -32,12 +34,20 @@ function TarjetaOrden({ orden, moneda = "Q" }) {
                 <dd>{departamento}</dd>
                 <dt>Categoria</dt>
                 <dd>{categoria}</dd>
-                <dt>Tecnico</dt>
-                <dd>{tecnico}</dd>
                 <dt>Fecha</dt>
                 <dd>{fechaLocal}</dd>
-                <dt>Horas</dt>
-                <dd>{horas}</dd>
+
+                {/* Los detalles solo se muestran cuando la tarjeta esta expandida. */}
+                {expandida && (
+                    <>
+                        <dt>NIT</dt>
+                        <dd>{nit}</dd>
+                        <dt>Tecnico</dt>
+                        <dd>{tecnico}</dd>
+                        <dt>Horas</dt>
+                        <dd>{horas}</dd>
+                    </>
+                )}
             </dl>
 
             {/* Renderizado condicional: la nota solo aparece si se cumple la condicion. */}
@@ -46,6 +56,15 @@ function TarjetaOrden({ orden, moneda = "Q" }) {
             <p className="tarjeta__monto">
                 {moneda} {montoLocal}
             </p>
+
+            <button
+                type="button"
+                className="boton boton--secundario tarjeta__boton"
+                aria-expanded={expandida}
+                onClick={() => setExpandida((actual) => !actual)}
+            >
+                {expandida ? "Ver menos" : "Ver mas"}
+            </button>
         </article>
     );
 }
