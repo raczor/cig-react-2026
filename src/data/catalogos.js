@@ -10,6 +10,8 @@ export const DEPARTAMENTOS = [
     "Quetzaltenango",
     "Escuintla",
     "Alta Verapaz",
+    "Baja Verapaz",
+    "El Progreso",
 ];
 
 export const CATEGORIAS = [

@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { ordenes as ordenesIniciales } from "./data/datos.js";
 import BarraFiltros from "./components/BarraFiltros.jsx";
-
+import FormularioOrden from "./components/FormularioOrden.jsx";
 
 import Panel from "./components/Panel.jsx";
 import ResumenOrdenes from "./components/ResumenOrdenes.jsx";
@@ -28,6 +28,32 @@ function App() {
   const [busqueda, setBusqueda] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [criterio, setCriterio] = useState("fecha");
+
+  // ALTA: arreglo nuevo con un elemento mas. Nunca push sobre el estado.
+  // Forma funcional: recibe el arreglo mas reciente, no la foto del render.
+  function agregarOrden(datos) {
+    setOrdenes((anteriores) => {
+      const ids = anteriores.map((o) => o.id);
+      const id = Math.max(0, ...ids) + 1; // siguiente id: el mayor + 1
+      const codigo = "OS-2026-" + String(id).padStart(3, "0");
+      const nueva = {
+        ...datos, id, codigo, estado: "pendiente",
+      };
+      return [...anteriores, nueva];
+    });
+  }
+
+  // CAMBIO: map devuelve un objeto nuevo solo para la orden que coincide.
+  // TarjetaOrden la llama con el id de su orden.
+  function completarOrden(id) {
+    setOrdenes((anteriores) =>
+      anteriores.map((o) =>
+        o.id === id
+          ? { ...o, estado: "completada" }
+          : o
+      )
+    );
+  }
 
   // DERIVADO: se calcula en cada render. No se guarda en otro useState.
   // [...ordenes] copia el arreglo antes de ordenar: sort modifica el original.
@@ -63,8 +89,13 @@ function App() {
         />
         <ListaOrdenes
           ordenes={ordenesVisibles}
+          onCompletar={completarOrden}
           mensajeVacio="Ninguna orden coincide con los filtros."
         />
+      </Panel>
+
+      <Panel titulo="Registrar orden">
+        <FormularioOrden onAgregar={agregarOrden} />
       </Panel>
 
     </div>

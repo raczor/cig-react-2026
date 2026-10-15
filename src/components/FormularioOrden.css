@@ -1,0 +1,18 @@
+/* Formulario en dos columnas que pasa a una sola en pantallas angostas.
+   Los estilos de cada campo ya estan en global.css (.campo, .campo__control). */
+
+.formulario {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0 var(--espacio-2);
+    padding: var(--espacio-3);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    background-color: var(--color-superficie);
+    box-shadow: var(--sombra);
+}
+
+.formulario__acciones {
+    grid-column: 1 / -1;
+    text-align: right;
+}
