@@ -70,6 +70,14 @@ function App() {
           onDepartamentoChange={setDepartamento}
           onCriterioChange={setCriterio}
         />
+
+        {/* Completar es optimista (ver useCompletarOrden): si el servidor falla,
+            la orden vuelve a su estado y el error queda en la mutacion. */}
+        {completar.isError && (
+          <p className="mensaje mensaje--error aviso">
+            No se pudo completar la orden: {completar.error.message}
+          </p>
+        )}
         {isPending ? (
           <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
         ) : error ? (
@@ -88,18 +96,12 @@ function App() {
           />
         )}
 
-        {/* Con mutate el error no se lanza: queda en el estado de la mutacion. */}
-        {completar.isError && (
-          <p className="mensaje mensaje--error">No se pudo completar: {completar.error.message}</p>
-        )}
-
       </Panel>
 
       <Panel titulo="Registrar orden">
-        <FormularioOrden onAgregar={crear.mutate} />
-        {crear.isError && (
-          <p className="mensaje mensaje--error">No se pudo guardar: {crear.error.message}</p>
-        )}
+        {/* mutateAsync devuelve una promesa: el formulario la espera,
+            deshabilita el boton y muestra el error si falla. */}
+        <FormularioOrden onGuardar={crear.mutateAsync} textoBoton="Registrar orden" />
       </Panel>
 
     </div>

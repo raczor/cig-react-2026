@@ -31,12 +31,34 @@ export function useCrearOrden() {
   });
 }
 
-// COMPLETAR: PATCH del estado; en el cache se reemplaza solo esa orden.
+// COMPLETAR, version optimista: la etiqueta cambia antes de que responda
+// el servidor y, si el PATCH falla, la lista vuelve a como estaba.
 export function useCompletarOrden() {
+  const queryClient = useQueryClient();
   const cambiarLista = useCambiarLista();
+  const reemplazar = (actualizada) =>
+    cambiarLista((lista) => lista.map((o) => (o.id === actualizada.id ? actualizada : o)));
+
   return useMutation({
     mutationFn: (id) => cambiarEstado(id, "completada"),
-    onSuccess: (actualizada) =>
-      cambiarLista((lista) => lista.map((o) => (o.id === actualizada.id ? actualizada : o))),
+
+    // 1. Antes del PATCH: se cancela cualquier GET en curso (si llegara despues,
+    //    borraria el cambio), se guarda una foto y se marca la orden.
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ordenesQuery.queryKey });
+      const respaldo = queryClient.getQueryData(ordenesQuery.queryKey);
+      cambiarLista((lista) =>
+        lista.map((o) => (o.id === id ? { ...o, estado: "completada" } : o))
+      );
+      return { respaldo }; // llega a onError como tercer argumento
+    },
+
+    // 2a. Fallo: se restaura la foto. El mensaje queda en completar.error.
+    onError: (_error, _id, { respaldo }) => {
+      queryClient.setQueryData(ordenesQuery.queryKey, respaldo);
+    },
+
+    // 2b. Exito: se guarda la orden tal como la devolvio el servidor.
+    onSuccess: reemplazar,
   });
 }
