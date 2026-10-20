@@ -2,8 +2,8 @@ import { useState } from "react";
 import EtiquetaEstado from "./EtiquetaEstado.jsx";
 import "./TarjetaOrden.css";
 
-// Recibe UNA orden por props. No importa datos.js: por eso sigue sirviendo
-// cuando en la sesion 4 los datos lleguen por HTTP.
+// Recibe UNA orden por props. No sabe de donde salio: por eso sirvio igual
+// con datos locales y con datos de la API.
 function TarjetaOrden({ orden, moneda = "Q", onCompletar }) {
     // Estado LOCAL: solo esta tarjeta necesita saber si esta expandida.
     const [expandida, setExpandida] = useState(false);

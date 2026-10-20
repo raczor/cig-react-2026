@@ -12,3 +12,12 @@
   text-transform: uppercase;
   color: var(--color-texto-suave);
 }
+
+/* Mensaje de error con su boton de Reintentar (sesion 4). */
+.mensaje--error p {
+  margin: 0 0 var(--espacio-1) 0;
+}
+
+.mensaje--error .boton {
+  margin-top: var(--espacio-1);
+}

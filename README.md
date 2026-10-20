@@ -84,7 +84,7 @@ react-2026/
     ├── services/         Funciones que hablan con la API (sesión 4)
     ├── hooks/            Hooks propios (sesión 4)
     ├── context/          Estado compartido (sesión 6)
-    ├── data/             Datos locales, se elimina en la sesión 4
+    ├── data/             Listas cerradas (catalogos.js); datos.js se eliminó en la sesión 5
     └── styles/           Variables y estilos globales
 ```
 
@@ -114,7 +114,7 @@ Campos de cada orden:
 
 Valores posibles:
 
-- **departamento**: Guatemala, Sacatepéquez, Chimaltenango, Quetzaltenango, Escuintla, Alta Verapaz
+- **departamento**: Guatemala, Sacatepéquez, Chimaltenango, Quetzaltenango, Escuintla, Alta Verapaz, Baja Verapaz, El Progreso
 - **categoria**: Instalación, Mantenimiento preventivo, Reparación, Diagnóstico
 - **estado**: pendiente, en proceso, completada, cancelada
 

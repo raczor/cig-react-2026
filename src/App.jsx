@@ -1,8 +1,6 @@
-// App es el unico archivo que sabe de donde salen los datos.
-// En la sesion 4 esta linea se cambia por una llamada a la API y
-// ningun otro componente se modifica.
+// App pide los datos con el hook useFetch. Ningun dato esta escrito en el codigo:
+// todo sale de la API que levanta npm run api.
 import { useState } from "react";
-import { ordenes as ordenesIniciales } from "./data/datos.js";
 import BarraFiltros from "./components/BarraFiltros.jsx";
 import FormularioOrden from "./components/FormularioOrden.jsx";
 
@@ -10,6 +8,9 @@ import Panel from "./components/Panel.jsx";
 import ResumenOrdenes from "./components/ResumenOrdenes.jsx";
 import ListaOrdenes from "./components/ListaOrdenes.jsx";
 import "./App.css";
+
+import { obtenerOrdenes } from "./services/ordenes.js";
+import { useFetch } from "./hooks/useFetch.js";
 
 function normalizar(texto) {
   return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -24,7 +25,19 @@ const COMPARADORES = {
 
 function App() {
 
-  const [ordenes, setOrdenes] = useState(ordenesIniciales);
+  // Carga desde la API: el bloque useState + useEffect de la sesion 4
+  // ahora vive en src/hooks/useFetch.js.
+  const {
+    datos,
+    setDatos: setOrdenes,
+    cargando,
+    error,
+    recargar,
+  } = useFetch(obtenerOrdenes);
+
+  // datos es null mientras carga: la lista recibe [] para que .map no falle.
+  const ordenes = datos ?? [];
+
   const [busqueda, setBusqueda] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [criterio, setCriterio] = useState("fecha");
@@ -87,11 +100,24 @@ function App() {
           onDepartamentoChange={setDepartamento}
           onCriterioChange={setCriterio}
         />
-        <ListaOrdenes
-          ordenes={ordenesVisibles}
-          onCompletar={completarOrden}
-          mensajeVacio="Ninguna orden coincide con los filtros."
-        />
+        {cargando ? (
+          <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
+        ) : error ? (
+          <div className="mensaje mensaje--error">
+            <p>No se pudo cargar: {error}</p>
+            <p>Revise que la terminal de npm run api siga corriendo.</p>
+            <button className="boton" type="button" onClick={recargar}>
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <ListaOrdenes
+            ordenes={ordenesVisibles}
+            onCompletar={completarOrden}
+            mensajeVacio="Ninguna orden coincide con los filtros."
+          />
+        )}
+
       </Panel>
 
       <Panel titulo="Registrar orden">
