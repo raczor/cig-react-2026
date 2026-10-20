@@ -28,7 +28,7 @@ function App() {
   // refetch repite la peticion (el boton Reintentar).
   const { data, isPending, error, refetch } = useOrdenes();
   const crear = useCrearOrden();
-  const completar = useCompletarOrden();
+  const { completar, aviso } = useCompletarOrden();
 
   // data es undefined mientras carga: la lista recibe [] para que .map no falle.
   const ordenes = data ?? [];
@@ -72,15 +72,13 @@ function App() {
         />
 
         {/* Completar es optimista (ver useCompletarOrden): si el servidor falla,
-            la orden vuelve a su estado y el error queda en la mutacion. */}
-        {completar.isError && (
-          <p className="mensaje mensaje--error aviso">
-            No se pudo completar la orden: {completar.error.message}
-          </p>
-        )}
+            la orden vuelve a su estado y aqui se avisa. */}
+        {aviso && <p className="mensaje mensaje--error aviso">{aviso}</p>}
         {isPending ? (
           <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
-        ) : error ? (
+        ) : !data ? (
+          // Solo sin datos se reemplaza la lista por el error. Si una recarga
+          // falla despues, TanStack Query conserva la lista anterior.
           <div className="mensaje mensaje--error">
             <p>No se pudo cargar: {error.message}</p>
             <p>Revise que la terminal de npm run api siga corriendo.</p>
@@ -91,7 +89,7 @@ function App() {
         ) : (
           <ListaOrdenes
             ordenes={ordenesVisibles}
-            onCompletar={completar.mutate}
+            onCompletar={completar}
             mensajeVacio="Ninguna orden coincide con los filtros."
           />
         )}
