@@ -9,7 +9,7 @@ import ResumenOrdenes from "./components/ResumenOrdenes.jsx";
 import ListaOrdenes from "./components/ListaOrdenes.jsx";
 import "./App.css";
 
-import { obtenerOrdenes } from "./services/ordenes.js";
+import { obtenerOrdenes, crearOrden, cambiarEstado } from "./services/ordenes.js";
 import { useFetch } from "./hooks/useFetch.js";
 
 function normalizar(texto) {
@@ -42,31 +42,21 @@ function App() {
   const [departamento, setDepartamento] = useState("");
   const [criterio, setCriterio] = useState("fecha");
 
-  // ALTA: arreglo nuevo con un elemento mas. Nunca push sobre el estado.
-  // Forma funcional: recibe el arreglo mas reciente, no la foto del render.
-  function agregarOrden(datos) {
-    setOrdenes((anteriores) => {
-      const ids = anteriores.map((o) => o.id);
-      const id = Math.max(0, ...ids) + 1; // siguiente id: el mayor + 1
-      const codigo = "OS-2026-" + String(id).padStart(3, "0");
-      const nueva = {
-        ...datos, id, codigo, estado: "pendiente",
-      };
-      return [...anteriores, nueva];
-    });
+  // ALTA: espera al servidor. Entra al estado la orden que devolvio la API,
+  // con el id y el codigo que asigno el servidor.
+  async function agregarOrden(datosNuevos) {
+    const creada = await crearOrden(datosNuevos);
+    setOrdenes((anteriores) => [...anteriores, creada]);
   }
 
-  // CAMBIO: map devuelve un objeto nuevo solo para la orden que coincide.
-  // TarjetaOrden la llama con el id de su orden.
-  function completarOrden(id) {
+  // COMPLETAR: PATCH del campo estado; la lista recibe la orden actualizada.
+  async function completarOrden(id) {
+    const actualizada = await cambiarEstado(id, "completada");
     setOrdenes((anteriores) =>
-      anteriores.map((o) =>
-        o.id === id
-          ? { ...o, estado: "completada" }
-          : o
-      )
+      anteriores.map((o) => (o.id === id ? actualizada : o))
     );
   }
+
 
   // DERIVADO: se calcula en cada render. No se guarda en otro useState.
   // [...ordenes] copia el arreglo antes de ordenar: sort modifica el original.
