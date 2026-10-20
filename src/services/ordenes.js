@@ -29,7 +29,8 @@ async function pedir(ruta, opciones = {}) {
 }
 
 // GET /ordenes: el arreglo completo.
-export const obtenerOrdenes = () => pedir("/ordenes");
+// opciones puede traer signal para que TanStack Query cancele la peticion.
+export const obtenerOrdenes = (opciones) => pedir("/ordenes", opciones);
 
 // GET /ordenes/8: una orden. Si no existe, el servidor responde 404.
 export const obtenerOrden = (id) => pedir(`/ordenes/${id}`);

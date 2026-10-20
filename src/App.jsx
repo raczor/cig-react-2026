@@ -1,5 +1,5 @@
-// App pide los datos con el hook useFetch. Ningun dato esta escrito en el codigo:
-// todo sale de la API que levanta npm run api.
+// App pide los datos con TanStack Query (src/hooks/useOrdenes.js). Ningun dato
+// esta escrito en el codigo: todo sale de la API que levanta npm run api.
 import { useState } from "react";
 import BarraFiltros from "./components/BarraFiltros.jsx";
 import FormularioOrden from "./components/FormularioOrden.jsx";
@@ -9,8 +9,7 @@ import ResumenOrdenes from "./components/ResumenOrdenes.jsx";
 import ListaOrdenes from "./components/ListaOrdenes.jsx";
 import "./App.css";
 
-import { obtenerOrdenes, crearOrden, cambiarEstado } from "./services/ordenes.js";
-import { useFetch } from "./hooks/useFetch.js";
+import { useOrdenes, useCrearOrden, useCompletarOrden } from "./hooks/useOrdenes.js";
 
 function normalizar(texto) {
   return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -25,37 +24,18 @@ const COMPARADORES = {
 
 function App() {
 
-  // Carga desde la API: el bloque useState + useEffect de la sesion 4
-  // ahora vive en src/hooks/useFetch.js.
-  const {
-    datos,
-    setDatos: setOrdenes,
-    cargando,
-    error,
-    recargar,
-  } = useFetch(obtenerOrdenes);
+  // isPending: todavia no hay datos. error es un objeto Error, no un texto.
+  // refetch repite la peticion (el boton Reintentar).
+  const { data, isPending, error, refetch } = useOrdenes();
+  const crear = useCrearOrden();
+  const completar = useCompletarOrden();
 
-  // datos es null mientras carga: la lista recibe [] para que .map no falle.
-  const ordenes = datos ?? [];
+  // data es undefined mientras carga: la lista recibe [] para que .map no falle.
+  const ordenes = data ?? [];
 
   const [busqueda, setBusqueda] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [criterio, setCriterio] = useState("fecha");
-
-  // ALTA: espera al servidor. Entra al estado la orden que devolvio la API,
-  // con el id y el codigo que asigno el servidor.
-  async function agregarOrden(datosNuevos) {
-    const creada = await crearOrden(datosNuevos);
-    setOrdenes((anteriores) => [...anteriores, creada]);
-  }
-
-  // COMPLETAR: PATCH del campo estado; la lista recibe la orden actualizada.
-  async function completarOrden(id) {
-    const actualizada = await cambiarEstado(id, "completada");
-    setOrdenes((anteriores) =>
-      anteriores.map((o) => (o.id === id ? actualizada : o))
-    );
-  }
 
 
   // DERIVADO: se calcula en cada render. No se guarda en otro useState.
@@ -90,28 +70,36 @@ function App() {
           onDepartamentoChange={setDepartamento}
           onCriterioChange={setCriterio}
         />
-        {cargando ? (
+        {isPending ? (
           <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
         ) : error ? (
           <div className="mensaje mensaje--error">
-            <p>No se pudo cargar: {error}</p>
+            <p>No se pudo cargar: {error.message}</p>
             <p>Revise que la terminal de npm run api siga corriendo.</p>
-            <button className="boton" type="button" onClick={recargar}>
+            <button className="boton" type="button" onClick={() => refetch()}>
               Reintentar
             </button>
           </div>
         ) : (
           <ListaOrdenes
             ordenes={ordenesVisibles}
-            onCompletar={completarOrden}
+            onCompletar={completar.mutate}
             mensajeVacio="Ninguna orden coincide con los filtros."
           />
+        )}
+
+        {/* Con mutate el error no se lanza: queda en el estado de la mutacion. */}
+        {completar.isError && (
+          <p className="mensaje mensaje--error">No se pudo completar: {completar.error.message}</p>
         )}
 
       </Panel>
 
       <Panel titulo="Registrar orden">
-        <FormularioOrden onAgregar={agregarOrden} />
+        <FormularioOrden onAgregar={crear.mutate} />
+        {crear.isError && (
+          <p className="mensaje mensaje--error">No se pudo guardar: {crear.error.message}</p>
+        )}
       </Panel>
 
     </div>
