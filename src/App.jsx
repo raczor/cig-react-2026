@@ -42,6 +42,9 @@ function App() {
   const [departamento, setDepartamento] = useState("");
   const [criterio, setCriterio] = useState("fecha");
 
+  // Mensaje cuando una escritura falla.
+  const [aviso, setAviso] = useState(null);
+
   // ALTA: espera al servidor. Entra al estado la orden que devolvio la API,
   // con el id y el codigo que asigno el servidor.
   async function agregarOrden(datosNuevos) {
@@ -49,14 +52,26 @@ function App() {
     setOrdenes((anteriores) => [...anteriores, creada]);
   }
 
-  // COMPLETAR: PATCH del campo estado; la lista recibe la orden actualizada.
+  // COMPLETAR, version optimista: la pantalla cambia primero y, si el
+  // servidor no confirma, se vuelve al valor anterior.
   async function completarOrden(id) {
-    const actualizada = await cambiarEstado(id, "completada");
-    setOrdenes((anteriores) =>
-      anteriores.map((o) => (o.id === id ? actualizada : o))
-    );
-  }
+    const respaldo = ordenes; // foto antes del cambio
+    setAviso(null);
 
+    // 1. La etiqueta cambia sin esperar a la red.
+    setOrdenes((anteriores) =>
+      anteriores.map((o) => (o.id === id ? { ...o, estado: "completada" } : o))
+    );
+
+    try {
+      // 2. PATCH: solo viaja el campo estado.
+      await cambiarEstado(id, "completada");
+    } catch (err) {
+      // 3. La escritura fallo: se revierte y se avisa.
+      setOrdenes(respaldo);
+      setAviso(`No se pudo completar la orden: ${err.message}`);
+    }
+  }
 
   // DERIVADO: se calcula en cada render. No se guarda en otro useState.
   // [...ordenes] copia el arreglo antes de ordenar: sort modifica el original.
@@ -90,6 +105,8 @@ function App() {
           onDepartamentoChange={setDepartamento}
           onCriterioChange={setCriterio}
         />
+
+        {aviso && <p className="mensaje mensaje--error aviso">{aviso}</p>}
         {cargando ? (
           <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
         ) : error ? (
@@ -111,7 +128,9 @@ function App() {
       </Panel>
 
       <Panel titulo="Registrar orden">
-        <FormularioOrden onAgregar={agregarOrden} />
+        {/* onGuardar devuelve la promesa de agregarOrden: el formulario la espera,
+            deshabilita el boton y muestra el error si falla. */}
+        <FormularioOrden onGuardar={agregarOrden} textoBoton="Registrar orden" />
       </Panel>
 
     </div>

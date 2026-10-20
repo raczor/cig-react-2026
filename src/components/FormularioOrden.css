@@ -16,3 +16,8 @@
     grid-column: 1 / -1;
     text-align: right;
 }
+
+/* Error de envio: ocupa todo el ancho del formulario (sesion 5). */
+.formulario__error {
+    grid-column: 1 / -1;
+}

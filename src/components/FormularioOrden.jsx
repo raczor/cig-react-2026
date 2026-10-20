@@ -35,9 +35,32 @@ function validar(datos) {
     return errores;
 }
 
-function FormularioOrden({ onAgregar }) {
-    const [datos, setDatos] = useState(VACIO);
+// Convierte los textos del formulario a los tipos que guarda la API.
+// Si monto llegara como texto, el resumen concatenaria en vez de sumar.
+function convertir(datos) {
+    return {
+        ...datos,
+        nit: datos.nit.trim().toUpperCase(),
+        horas: Number(datos.horas),
+        monto: Number(datos.monto),
+    };
+}
+
+// El mismo formulario sirve para registrar y para editar:
+// - inicial:    VACIO al registrar; la orden que trajo el GET al editar.
+// - onGuardar:  funcion async de la pagina (crearOrden o actualizarOrden).
+//               Tiene que devolver la promesa para que aqui se pueda esperar.
+// - textoBoton: "Registrar orden" o "Guardar cambios".
+// El formulario no sabe si crea o edita: lo decide la pagina que lo usa.
+function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" }) {
+    // useState solo lee inicial al MONTAR. Por eso EditarOrden dibuja el
+    // formulario hasta que la orden ya llego.
+    const [datos, setDatos] = useState(inicial);
     const [errores, setErrores] = useState({});
+
+    // Estados de la escritura: mientras viaja la peticion y si fallo.
+    const [enviando, setEnviando] = useState(false);
+    const [errorEnvio, setErrorEnvio] = useState(null);
 
     // Un solo manejador para los ocho campos: el atributo name dice cual cambio.
     function manejarCambio(evento) {
@@ -46,7 +69,7 @@ function FormularioOrden({ onAgregar }) {
         setDatos((anteriores) => ({ ...anteriores, [name]: value }));
     }
 
-    function manejarEnvio(evento) {
+    async function manejarEnvio(evento) {
         // 1. Sin esto el navegador recarga la pagina y el estado se pierde.
         evento.preventDefault();
 
@@ -54,17 +77,23 @@ function FormularioOrden({ onAgregar }) {
         const encontrados = validar(datos);
         setErrores(encontrados);
 
-        // 3. Si hay al menos un error, no se entrega nada.
+        // 3. Si hay al menos un error, no se envia nada.
         if (Object.keys(encontrados).length > 0) return;
 
-        // 4. Entregar al padre con los numeros ya convertidos.
-        //    Si monto llegara como texto, el resumen concatenaria en vez de sumar.
-        onAgregar({
-            ...datos,
-            nit: datos.nit.trim().toUpperCase(),
-            horas: Number(datos.horas),
-            monto: Number(datos.monto),
-        });
+        // 4. Enviar. El boton queda deshabilitado mientras la peticion viaja:
+        //    sin eso, un doble clic registra la orden dos veces.
+        setEnviando(true);
+        setErrorEnvio(null);
+        try {
+            await onGuardar(convertir(datos));
+            // Si salio bien, la pagina navega a otra ruta y este formulario
+            // se desmonta: no hace falta limpiarlo.
+        } catch (err) {
+            // Fallo: los datos escritos se conservan para reintentar.
+            setErrorEnvio(err.message);
+        } finally {
+            setEnviando(false);
+        }
 
         // 5. Limpiar el formulario.
         setDatos(VACIO);
@@ -124,8 +153,16 @@ function FormularioOrden({ onAgregar }) {
                     min="0" step="0.01" value={datos.monto} onChange={manejarCambio} />
             </Campo>
 
+            {errorEnvio && (
+                <p className="mensaje mensaje--error formulario__error">
+                    No se pudo guardar: {errorEnvio}
+                </p>
+            )}
+
             <div className="formulario__acciones">
-                <button className="boton" type="submit">Registrar orden</button>
+                <button className="boton" type="submit" disabled={enviando}>
+                    {enviando ? "Guardando..." : textoBoton}
+                </button>
             </div>
         </form>
     );
