@@ -1,42 +1,42 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { obtenerOrdenes, crearOrden, cambiarEstado } from "../services/ordenes.js";
 
 // Hooks de datos con TanStack Query. Reemplazan a useFetch: el estado de
 // carga, el error, la cancelacion y el reintento los maneja la libreria.
 
-// La clave identifica estos datos en el cache. Todo el que use la misma
-// clave comparte la misma lista y la misma peticion.
-const CLAVE_ORDENES = ["ordenes"];
+// queryOptions junta la clave y la funcion en un solo lugar. La clave
+// identifica la lista en el cache; quien use esta consulta comparte los datos.
+// obtenerOrdenes va directo: recibe { signal } y cancela si nadie espera la respuesta.
+export const ordenesQuery = queryOptions({
+  queryKey: ["ordenes"],
+  queryFn: obtenerOrdenes,
+});
 
-// LECTURA: queryFn recibe signal; si el componente se desmonta, la peticion se cancela.
-export function useOrdenes() {
-  return useQuery({
-    queryKey: CLAVE_ORDENES,
-    queryFn: ({ signal }) => obtenerOrdenes({ signal }),
-  });
+// LECTURA
+export const useOrdenes = () => useQuery(ordenesQuery);
+
+// Aplica un cambio a la lista guardada en el cache, sin volver a pedirla.
+function useCambiarLista() {
+  const queryClient = useQueryClient();
+  return (cambio) =>
+    queryClient.setQueryData(ordenesQuery.queryKey, (anteriores = []) => cambio(anteriores));
 }
 
 // ALTA: cuando el servidor responde, la orden creada entra al cache.
-// setQueryData evita volver a pedir la lista completa.
 export function useCrearOrden() {
-  const queryClient = useQueryClient();
+  const cambiarLista = useCambiarLista();
   return useMutation({
     mutationFn: crearOrden,
-    onSuccess: (creada) => {
-      queryClient.setQueryData(CLAVE_ORDENES, (anteriores = []) => [...anteriores, creada]);
-    },
+    onSuccess: (creada) => cambiarLista((lista) => [...lista, creada]),
   });
 }
 
 // COMPLETAR: PATCH del estado; en el cache se reemplaza solo esa orden.
 export function useCompletarOrden() {
-  const queryClient = useQueryClient();
+  const cambiarLista = useCambiarLista();
   return useMutation({
     mutationFn: (id) => cambiarEstado(id, "completada"),
-    onSuccess: (actualizada) => {
-      queryClient.setQueryData(CLAVE_ORDENES, (anteriores = []) =>
-        anteriores.map((o) => (o.id === actualizada.id ? actualizada : o))
-      );
-    },
+    onSuccess: (actualizada) =>
+      cambiarLista((lista) => lista.map((o) => (o.id === actualizada.id ? actualizada : o))),
   });
 }
