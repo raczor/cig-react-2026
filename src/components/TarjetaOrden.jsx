@@ -38,7 +38,7 @@ function TarjetaOrden({ orden, moneda = "Q", onCompletar, abierta = false }) {
             <dl className="tarjeta__datos">
                 <dt>Departamento</dt>
                 <dd>{departamento}</dd>
-                <dt>Categoria</dt>
+                <dt>Categoría</dt>
                 <dd>{categoria}</dd>
                 <dt>Fecha</dt>
                 <dd>{fechaLocal}</dd>
@@ -47,7 +47,7 @@ function TarjetaOrden({ orden, moneda = "Q", onCompletar, abierta = false }) {
                     <>
                         <dt>NIT</dt>
                         <dd>{nit}</dd>
-                        <dt>Tecnico</dt>
+                        <dt>Técnico</dt>
                         <dd>{tecnico}</dd>
                         <dt>Horas</dt>
                         <dd>{horas}</dd>
@@ -68,7 +68,7 @@ function TarjetaOrden({ orden, moneda = "Q", onCompletar, abierta = false }) {
                     className="boton boton--secundario tarjeta__boton"
                     onClick={() => setExpandida((valor) => !valor)}
                 >
-                    {expandida ? "Ver menos" : "Ver mas"}
+                    {expandida ? "Ver menos" : "Ver más"}
                 </button>
 
                 {/* El hijo avisa al padre: llama a la funcion que recibio por props. */}

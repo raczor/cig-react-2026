@@ -14,7 +14,7 @@ function BarraFiltros({
     return (
         <div className="filtros">
             <label className="campo">
-                <span className="campo__etiqueta">Buscar por codigo o cliente</span>
+                <span className="campo__etiqueta">Buscar por código o cliente</span>
                 <input
                     className="campo__control"
                     type="search"
@@ -47,9 +47,9 @@ function BarraFiltros({
                     value={criterio}
                     onChange={(evento) => onCriterioChange(evento.target.value)}
                 >
-                    <option value="fecha">Mas recientes</option>
+                    <option value="fecha">Más recientes</option>
                     <option value="monto">Mayor monto</option>
-                    <option value="codigo">Codigo</option>
+                    <option value="codigo">Código</option>
                 </select>
             </label>
         </div>

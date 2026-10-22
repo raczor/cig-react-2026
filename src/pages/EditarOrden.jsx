@@ -23,7 +23,7 @@ function EditarOrden() {
         return <p className="mensaje mensaje--cargando">Cargando orden...</p>;
     }
     if (error) {
-        return <p className="mensaje mensaje--error">No se pudo cargar: {error.message}</p>;
+        return <p className="mensaje mensaje--error" role="alert">No se pudo cargar: {error.message}</p>;
     }
 
     return (

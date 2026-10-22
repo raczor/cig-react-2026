@@ -15,7 +15,7 @@ const API_URL =
 // cuando hay cuerpo: en un GET dispararia una peticion OPTIONS extra (CORS).
 async function pedir(ruta, { body, ...opciones } = {}) {
     if (!API_URL) {
-        throw new Error("Falta la variable VITE_API_URL: la aplicacion no sabe donde esta la API.");
+        throw new Error("Falta la variable VITE_API_URL: la aplicación no sabe dónde está la API.");
     }
     const respuesta = await fetch(API_URL + ruta, {
         ...opciones,
@@ -31,7 +31,7 @@ async function pedir(ruta, { body, ...opciones } = {}) {
     // Un 404 o un 500 SI son respuestas: se convierten en error a mano
     // para que caigan en el catch de quien llama.
     if (!respuesta.ok) {
-        throw new Error(`El servidor respondio ${respuesta.status}`);
+        throw new Error(`El servidor respondió ${respuesta.status}`);
     }
 
     // json-server responde con JSON incluso en DELETE ({}).

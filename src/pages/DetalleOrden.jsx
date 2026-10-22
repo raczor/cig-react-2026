@@ -25,7 +25,7 @@ function DetalleOrden() {
     if (error) {
         // /ordenes/99: la ruta SI coincide; el 404 lo responde la API.
         return (
-            <div className="mensaje mensaje--error">
+            <div className="mensaje mensaje--error" role="alert">
                 <p>No se pudo cargar la orden {id}: {error.message}</p>
                 <Link to="/">Volver al listado</Link>
             </div>
@@ -34,7 +34,7 @@ function DetalleOrden() {
 
     async function eliminar() {
         const confirmado = window.confirm(
-            `Se encuentra completamente seguro de eliminar ${orden.codigo}? No se puede deshacer.`
+            `¿Seguro que quieres eliminar ${orden.codigo}? No se puede deshacer.`
         );
         if (!confirmado) return; // Cancelar: no sale ninguna peticion
 
@@ -50,7 +50,7 @@ function DetalleOrden() {
 
     return (
         <Panel titulo={`Orden ${orden.codigo}`}>
-            {aviso && <p className="mensaje mensaje--error">{aviso}</p>}
+            {aviso && <p className="mensaje mensaje--error" role="alert">{aviso}</p>}
 
             {/* La misma tarjeta del listado, abierta con todos los campos */}
             <TarjetaOrden orden={orden} abierta />

@@ -73,7 +73,7 @@ function ListadoOrdenes() {
                 <ResumenOrdenes ordenes={ordenesVisibles} />
             </Panel>
 
-            <Panel titulo={`Ordenes registradas (${ordenesVisibles.length} de ${ordenes.length})`}>
+            <Panel titulo={`Órdenes registradas (${ordenesVisibles.length} de ${ordenes.length})`}>
                 <BarraFiltros
                     busqueda={busqueda}
                     departamento={departamento}
@@ -85,16 +85,16 @@ function ListadoOrdenes() {
 
                 {/* Completar es optimista (ver useCompletarOrden): si el servidor
                     falla, la orden vuelve a su estado y aqui se avisa. */}
-                {aviso && <p className="mensaje mensaje--error aviso">{aviso}</p>}
+                {aviso && <p className="mensaje mensaje--error aviso" role="alert">{aviso}</p>}
 
                 {/* Los cuatro estados, en este orden: cargando, error, vacio, con datos.
             El vacio lo resuelve ListaOrdenes con su salida temprana. */}
                 {isPending ? (
-                    <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
+                    <p className="mensaje mensaje--cargando">Cargando órdenes...</p>
                 ) : !data ? (
-                    <div className="mensaje mensaje--error">
+                    <div className="mensaje mensaje--error" role="alert">
                         <p>No se pudo cargar: {error.message}</p>
-                        <p>Revise que la terminal de npm run api siga corriendo.</p>
+                        <p>Revisa que la terminal de npm run api siga corriendo.</p>
                         <button className="boton" type="button" onClick={() => refetch()}>
                             Reintentar
                         </button>
