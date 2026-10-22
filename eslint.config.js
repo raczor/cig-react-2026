@@ -22,6 +22,6 @@ export default [
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
-  // Archivos de Node: configuracion de Vite y de ESLint.
-  { files: ["vite.config.js", "eslint.config.js"], languageOptions: { globals: globals.node } },
+  // Archivos de Node: configuracion de Vite y de ESLint, y la funcion de api/.
+  { files: ["vite.config.js", "eslint.config.js", "api/**"], languageOptions: { globals: globals.node } },
 ];
