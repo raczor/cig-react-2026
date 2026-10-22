@@ -36,7 +36,12 @@ export const useOrden = (id) => useQuery(ordenQuery(id));
 function useCambiarLista() {
   const queryClient = useQueryClient();
   return (cambio) =>
-    queryClient.setQueryData(ordenesQuery.queryKey, (anteriores = []) => cambio(anteriores));
+    queryClient.setQueryData(
+      ordenesQuery.queryKey,
+      // Si la lista aun no esta en el cache, no se inventa una: devolver
+      // undefined deja el cache igual y el GET traera la lista completa.
+      (anteriores) => anteriores && cambio(anteriores)
+    );
 }
 
 // ALTA: cuando el servidor responde, la orden creada entra al cache.
@@ -69,7 +74,8 @@ export function useEliminarOrden() {
   return useMutation({
     mutationFn: eliminarOrden,
     onSuccess: (_resp, id) => {
-      queryClient.removeQueries({ queryKey: ordenQuery(id).queryKey });
+      // String(id): la clave del detalle usa el id de la URL, que es texto.
+      queryClient.removeQueries({ queryKey: ordenQuery(String(id)).queryKey });
       queryClient.setQueryData(ordenesQuery.queryKey, (lista) =>
         lista?.filter((o) => o.id !== id)
       );

@@ -4,6 +4,7 @@ import ListadoOrdenes from "./pages/ListadoOrdenes.jsx";
 import NuevaOrden from "./pages/NuevaOrden.jsx";
 import DetalleOrden from "./pages/DetalleOrden.jsx";
 import EditarOrden from "./pages/EditarOrden.jsx";
+import NoEncontrada from "./pages/NoEncontrada.jsx";
 
 import "./App.css";
 
@@ -20,6 +21,8 @@ function App() {
         <Route path="ordenes/nueva" element={<NuevaOrden />} />
         <Route path="ordenes/:id" element={<DetalleOrden />} />
         <Route path="ordenes/:id/editar" element={<EditarOrden />} />
+        {/* Comodin: cualquier URL que ninguna otra ruta reconozca */}
+        <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>
   );
