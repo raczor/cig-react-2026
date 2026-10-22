@@ -3,7 +3,7 @@ import Field from "./Field.jsx";
 import { DEPARTMENTS, CATEGORY_LABELS } from "../data/catalogs.js";
 import Button from "./ui/Button.jsx";
 import Alert from "./ui/Alert.jsx";
-import { controlClass } from "./ui/styles.js";
+import { controlClass, selectClass } from "./ui/styles.js";
 
 // Inputs always yield strings, even with type="number".
 const EMPTY = {
@@ -108,7 +108,7 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
             </Field>
 
             <Field label="Departamento" name="department" error={errors.department}>
-                <select className={controlClass} name="department" {...a11y("department")}
+                <select className={selectClass} name="department" {...a11y("department")}
                     value={values.department} onChange={handleChange}>
                     <option value="">Selecciona</option>
                     {DEPARTMENTS.map((name) => (
@@ -118,7 +118,7 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
             </Field>
 
             <Field label="Categoría" name="category" error={errors.category}>
-                <select className={controlClass} name="category" {...a11y("category")}
+                <select className={selectClass} name="category" {...a11y("category")}
                     value={values.category} onChange={handleChange}>
                     <option value="">Selecciona</option>
                     {Object.entries(CATEGORY_LABELS).map(([value, label]) => (

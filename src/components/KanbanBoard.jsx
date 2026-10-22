@@ -17,7 +17,7 @@ function KanbanBoard({ orders, onMove }) {
     const statuses = Object.entries(STATUS_LABELS);
 
     return (
-        <div className="grid grid-cols-[repeat(4,minmax(300px,1fr))] gap-8 overflow-x-auto rounded-xl bg-[radial-gradient(circle_at_25%_0%,var(--color-brand-700),var(--color-brand-950)_75%)] p-6">
+        <div className="grid grid-cols-[repeat(4,minmax(340px,1fr))] gap-8 overflow-x-auto rounded-xl bg-[radial-gradient(circle_at_25%_0%,var(--color-brand-700),var(--color-brand-950)_75%)] p-6">
             {statuses.map(([status, label], index) => {
                 const column = orders.filter((order) => order.status === status);
                 const isLast = index === statuses.length - 1;

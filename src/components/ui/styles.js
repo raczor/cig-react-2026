@@ -22,3 +22,5 @@ const BUTTON_SIZES = {
 export function buttonClass({ variant = "primary", size = "md", className = "" } = {}) {
     return `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`;
 }
+
+export const selectClass = `${controlClass} select-chevron`;

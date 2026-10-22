@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge.jsx";
 import Button from "./ui/Button.jsx";
@@ -27,7 +28,10 @@ function Avatar({ name }) {
 
 // Dragging needs a mouse, so every card also has a "Mover a" select (keyboard and touch).
 function KanbanCard({ order, onMove }) {
-    const { id, code, category, department, technician, amount, status } = order;
+    const [expanded, setExpanded] = useState(false);
+    const { id, code, client, taxId, category, department, technician, date, hours, amount, status } = order;
+    // "T00:00:00" keeps the date from shifting a day with the timezone.
+    const localDate = new Date(date + "T00:00:00").toLocaleDateString("es-GT");
     const canComplete = status === "pending" || status === "in_progress";
 
     function handleDragStart(event) {
@@ -75,17 +79,40 @@ function KanbanCard({ order, onMove }) {
                 Técnico <Avatar name={technician} /> {technician}
             </p>
 
+            {expanded && (
+                <dl className="mb-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 rounded-lg bg-slate-50 p-3">
+                    <dt>Cliente</dt>
+                    <dd className="m-0 font-medium text-slate-900">{client}</dd>
+                    <dt>Fecha</dt>
+                    <dd className="m-0">{localDate}</dd>
+                    <dt>NIT</dt>
+                    <dd className="m-0">{taxId}</dd>
+                    <dt>Horas</dt>
+                    <dd className="m-0">
+                        {hours}
+                        {hours > 8 && (
+                            <span className="ml-2 rounded bg-brand-100 px-1.5 py-0.5 text-xs font-bold text-brand-800">
+                                Jornada extendida
+                            </span>
+                        )}
+                    </dd>
+                </dl>
+            )}
+
             <div className="mt-1 flex flex-wrap items-center gap-2">
                 {canComplete && (
                     <Button variant="secondary" size="sm" onClick={() => onMove(id, "completed")}>
                         Completar
                     </Button>
                 )}
+                <Button variant="secondary" size="sm" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+                    {expanded ? "Ver menos" : "Ver más"}
+                </Button>
                 <select
                     aria-label={`Mover la orden ${code} a`}
                     value=""
                     onChange={(event) => onMove(id, event.target.value)}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
+                    className="select-chevron rounded-lg border border-slate-300 bg-white py-1 pl-2 text-xs"
                 >
                     <option value="" disabled>Mover a...</option>
                     {Object.entries(STATUS_LABELS)

@@ -4,7 +4,7 @@ import { DEPARTMENTS } from "../data/catalogs.js";
 import { useOrders, useChangeStatus } from "../hooks/useOrders.js";
 import Alert from "../components/ui/Alert.jsx";
 import Button from "../components/ui/Button.jsx";
-import { controlClass } from "../components/ui/styles.js";
+import { selectClass } from "../components/ui/styles.js";
 
 // Strips accents and case so "Panajachel" matches "panajachel" and "Sacatepéquez" matches "sacatepequez".
 function normalize(text) {
@@ -54,7 +54,7 @@ function OrdersPage() {
 
     const hasFilters = search !== "" || department !== "";
 
-    const selectClass = `${controlClass} !w-auto min-w-44 !py-1.5 font-normal`;
+    const filterSelectClass = `${selectClass} !w-auto min-w-44 !py-1.5 font-normal`;
 
     return (
         <>
@@ -67,7 +67,7 @@ function OrdersPage() {
                 <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
                     Departamento
                     <select
-                        className={selectClass}
+                        className={filterSelectClass}
                         value={department}
                         onChange={(event) => setFilter("department", event.target.value)}
                     >
@@ -81,7 +81,7 @@ function OrdersPage() {
                 <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
                     Ordenar por
                     <select
-                        className={selectClass}
+                        className={filterSelectClass}
                         value={sort}
                         onChange={(event) => setFilter("sort", event.target.value)}
                     >
