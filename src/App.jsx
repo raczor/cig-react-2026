@@ -6,8 +6,6 @@ import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 import EditOrderPage from "./pages/EditOrderPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
-import "./App.css";
-
 function App() {
   return (
     <Routes>

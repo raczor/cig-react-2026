@@ -39,7 +39,7 @@ src/
 
 | Path | Page |
 |---|---|
-| `/` | Order list with filters (`?q=&department=&sort=`) |
+| `/` | Order list; search in the header and sidebar filters (`?q=&department=&status=&sort=`) |
 | `/orders/new` | Register an order |
 | `/orders/:id` | Order detail |
 | `/orders/:id/edit` | Edit an order |

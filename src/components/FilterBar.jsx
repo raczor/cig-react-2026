@@ -1,50 +1,59 @@
-import { DEPARTMENTS } from "../data/catalogs.js";
+import { useState } from "react";
+import { DEPARTMENTS, STATUS_LABELS } from "../data/catalogs.js";
 import "./FilterBar.css";
 
-// Controlled component: it holds no state of its own.
-function FilterBar({ search, department, sort, onSearchChange, onDepartmentChange, onSortChange }) {
+// Controlled sidebar: it holds no state of its own. "" means "any".
+function FilterBar({ department, status, onDepartmentChange, onStatusChange, onClear, hasFilters }) {
+    // Collapsed on small screens so the results are not pushed down the page.
+    const [open] = useState(() => !window.matchMedia("(max-width: 860px)").matches);
+
     return (
-        <div className="filters">
-            <label className="field">
-                <span className="field__label">Buscar por código o cliente</span>
-                <input
-                    className="field__control"
-                    type="search"
-                    placeholder="OS-2026-001 o Hotel"
-                    value={search}
-                    onChange={(event) => onSearchChange(event.target.value)}
-                />
-            </label>
+        <details className="filters" open={open}>
+            {/* Not collapsible on desktop: pointer-events is off in CSS and the keyboard is blocked here. */}
+            <summary
+                className="filters__summary"
+                onClick={(event) => {
+                    if (window.matchMedia("(min-width: 861px)").matches) event.preventDefault();
+                }}
+            >
+                Filtros
+            </summary>
+            <fieldset className="filters__group">
+                <legend className="filters__title">Departamento</legend>
+                {[["", "Todos"], ...DEPARTMENTS.map((name) => [name, name])].map(([value, label]) => (
+                    <label key={value} className="filters__option">
+                        <input
+                            type="radio"
+                            name="department"
+                            checked={department === value}
+                            onChange={() => onDepartmentChange(value)}
+                        />
+                        {label}
+                    </label>
+                ))}
+            </fieldset>
 
-            <label className="field">
-                <span className="field__label">Departamento</span>
-                <select
-                    className="field__control"
-                    value={department}
-                    onChange={(event) => onDepartmentChange(event.target.value)}
-                >
-                    <option value="">Todos</option>
-                    {DEPARTMENTS.map((name) => (
-                        <option key={name} value={name}>
-                            {name}
-                        </option>
-                    ))}
-                </select>
-            </label>
+            <fieldset className="filters__group">
+                <legend className="filters__title">Estado</legend>
+                {[["", "Todos"], ...Object.entries(STATUS_LABELS)].map(([value, label]) => (
+                    <label key={value} className="filters__option">
+                        <input
+                            type="radio"
+                            name="status"
+                            checked={status === value}
+                            onChange={() => onStatusChange(value)}
+                        />
+                        {label}
+                    </label>
+                ))}
+            </fieldset>
 
-            <label className="field">
-                <span className="field__label">Ordenar por</span>
-                <select
-                    className="field__control"
-                    value={sort}
-                    onChange={(event) => onSortChange(event.target.value)}
-                >
-                    <option value="date">Más recientes</option>
-                    <option value="amount">Mayor monto</option>
-                    <option value="code">Código</option>
-                </select>
-            </label>
-        </div>
+            {hasFilters && (
+                <button type="button" className="filters__clear" onClick={onClear}>
+                    Limpiar filtros
+                </button>
+            )}
+        </details>
     );
 }
 

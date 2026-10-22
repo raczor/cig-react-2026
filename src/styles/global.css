@@ -9,57 +9,73 @@ body {
   background-color: var(--color-background);
   color: var(--color-text);
   font-family: var(--font);
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 h1,
 h2,
 h3 {
-  margin: 0 0 var(--space-2) 0;
+  margin: 0 0 var(--space-1) 0;
   line-height: 1.25;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 h1 {
-  font-size: 1.9rem;
+  font-size: 1.6rem;
 }
+
 h2 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
 }
+
 h3 {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
 }
 
 p {
-  margin: 0 0 var(--space-2) 0;
+  margin: 0 0 var(--space-1) 0;
 }
 
 a {
-  color: var(--color-accent-dark);
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-2);
 }
 
 .button {
   display: inline-block;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-small);
-  background-color: var(--color-accent);
-  color: #ffffff;
+  padding: 0.4rem var(--space-2);
+  border: 1px solid #fcd200;
+  border-radius: 999px;
+  background-color: var(--color-cta);
+  color: var(--color-text);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
   cursor: pointer;
 }
 
 .button:hover {
-  background-color: var(--color-accent-dark);
-  border-color: var(--color-accent-dark);
+  background-color: var(--color-cta-hover);
+  color: var(--color-text);
+  text-decoration: none;
 }
 
 .button:disabled {
@@ -68,18 +84,23 @@ a {
 }
 
 .button--secondary {
-  background-color: transparent;
-  color: var(--color-accent-dark);
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
 }
 
 .button--secondary:hover {
-  background-color: rgba(122, 165, 199, 0.12);
-  color: var(--color-accent-dark);
+  background-color: #f7fafa;
 }
 
 .button--danger {
-  background-color: var(--color-cancelled);
-  border-color: var(--color-cancelled);
+  border-color: var(--color-danger);
+  background-color: var(--color-surface);
+  color: var(--color-danger);
+}
+
+.button--danger:hover {
+  background-color: var(--color-error-bg);
+  color: var(--color-danger);
 }
 
 .field {
@@ -91,22 +112,24 @@ a {
   display: block;
   margin-bottom: 0.25rem;
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  font-weight: 700;
 }
 
 .field__control {
   width: 100%;
-  padding: var(--space-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-small);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #888c8c;
+  border-radius: 4px;
   background-color: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(15, 17, 17, 0.15) inset;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .field__control:focus {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 1px;
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 0;
 }
 
 .field__error {
@@ -117,23 +140,31 @@ a {
 
 .badge {
   display: inline-block;
-  padding: 0.15rem var(--space-1);
+  padding: 0.1rem 0.6rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  color: #2b2b2b;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .badge--pending {
   background-color: var(--color-pending);
+  color: var(--color-pending-text);
 }
+
 .badge--in-progress {
   background-color: var(--color-in-progress);
+  color: var(--color-in-progress-text);
 }
+
 .badge--completed {
   background-color: var(--color-completed);
+  color: var(--color-completed-text);
 }
+
 .badge--cancelled {
   background-color: var(--color-cancelled);
+  color: var(--color-cancelled-text);
 }
 
 .message {
@@ -143,17 +174,27 @@ a {
 }
 
 .message--loading {
-  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
   color: var(--color-text-muted);
 }
 
 .message--error {
+  border: 1px solid #e9b0a6;
   background-color: var(--color-error-bg);
   color: var(--color-error-text);
 }
 
 .message--empty {
-  background-color: var(--color-notice-bg);
-  color: var(--color-notice-text);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.message--error p {
+  margin: 0 0 var(--space-1) 0;
+}
+
+.message--error .button {
+  margin-top: var(--space-1);
 }

@@ -48,7 +48,7 @@ function OrderDetailPage() {
 
             <OrderCard order={order} open />
 
-            <div className="card__actions">
+            <div className="detail__actions">
                 {/* Going back (-1) keeps the list filters, which live in the URL. */}
                 <Link
                     className="button button--secondary"
