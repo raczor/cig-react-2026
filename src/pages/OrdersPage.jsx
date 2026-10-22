@@ -2,20 +2,10 @@ import { useSearchParams } from "react-router-dom";
 import KanbanBoard from "../components/KanbanBoard.jsx";
 import { DEPARTMENTS } from "../data/catalogs.js";
 import { useOrders, useChangeStatus } from "../hooks/useOrders.js";
+import { SORTERS, filterOrders } from "../lib/filters.js";
 import Alert from "../components/ui/Alert.jsx";
 import Button from "../components/ui/Button.jsx";
 import { selectClass } from "../components/ui/styles.js";
-
-// Strips accents and case so "Panajachel" matches "panajachel" and "Sacatepéquez" matches "sacatepequez".
-function normalize(text) {
-    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-}
-
-const SORTERS = {
-    date: (a, b) => b.date.localeCompare(a.date),
-    amount: (a, b) => b.amount - a.amount,
-    code: (a, b) => a.code.localeCompare(b.code),
-};
 
 function OrdersPage() {
     const { data, isPending, error, refetch } = useOrders();
@@ -44,13 +34,7 @@ function OrdersPage() {
         );
     }
 
-    const text = normalize(search.trim());
-    const visibleOrders = [...orders]
-        .sort(SORTERS[sort])
-        .filter((order) => department === "" || order.department === department)
-        .filter(
-            (order) => normalize(order.code).includes(text) || normalize(order.client).includes(text)
-        );
+    const visibleOrders = filterOrders(orders, { search, department, sort });
 
     const hasFilters = search !== "" || department !== "";
 

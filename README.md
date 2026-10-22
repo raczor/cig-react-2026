@@ -20,6 +20,7 @@ npm run dev   # terminal 2: app on http://localhost:5173
 | `npm run build` | Production build into `dist` |
 | `npm run preview` | Serves the production build locally |
 | `npm run lint` | ESLint |
+| `npm test` | Vitest, run once (`npm run test:watch` to keep watching) |
 
 ## Structure
 
@@ -32,7 +33,9 @@ src/
   pages/         One component per route
   hooks/         TanStack Query hooks (useOrders.js)
   services/      HTTP calls (the only place that uses fetch)
+  lib/           Pure logic: form validation, board filtering and sorting
   data/          Departments, category and status labels
+  test/          Test setup, fixtures and the render helper
   styles/        Tailwind entry and design tokens (index.css)
 ```
 
