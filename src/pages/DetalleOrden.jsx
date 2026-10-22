@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Panel from "../components/Panel.jsx";
 import TarjetaOrden from "../components/TarjetaOrden.jsx";
 import { useOrden, useEliminarOrden } from "../hooks/useOrdenes.js";
@@ -9,6 +9,8 @@ function DetalleOrden() {
     // Todo lo que sale de la URL es texto: /ordenes/8 entrega { id: "8" }.
     const { id } = useParams();
     const navigate = useNavigate();
+    // key "default" = primera pagina de la sesion: no hay a donde volver con -1.
+    const hayHistorial = useLocation().key !== "default";
     const [aviso, setAviso] = useState(null);
 
     // Si el id de la URL cambia, la consulta se repite.
@@ -54,7 +56,16 @@ function DetalleOrden() {
             <TarjetaOrden orden={orden} abierta />
 
             <div className="tarjeta__acciones">
-                <Link className="boton boton--secundario" to="/">
+                {/* Atras (-1) conserva los filtros del listado, que viven en la URL */}
+                <Link
+                    className="boton boton--secundario"
+                    to="/"
+                    onClick={(evento) => {
+                        if (!hayHistorial) return;
+                        evento.preventDefault();
+                        navigate(-1);
+                    }}
+                >
                     Volver
                 </Link>
                 <Link className="boton" to={`/ordenes/${orden.id}/editar`}>

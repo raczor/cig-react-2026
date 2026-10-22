@@ -4,7 +4,9 @@
 // La URL sale de .env (copia de .env.example). Vite solo expone las variables
 // que empiezan con VITE_ y las lee al arrancar: si cambia .env, reinicie npm run dev.
 // En la sesion 6 se cambia solo .env para apuntar a la API alojada.
-const API_URL = import.meta.env.VITE_API_URL;
+// Sin VITE_API_URL solo se acepta el backend local, y solo en desarrollo.
+const API_URL =
+    import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:3001" : undefined);
 
 // ─── Cliente HTTP ─────────────────────────────────────────────
 
@@ -12,6 +14,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 // body llega como objeto y se convierte a JSON aqui. La cabecera solo viaja
 // cuando hay cuerpo: en un GET dispararia una peticion OPTIONS extra (CORS).
 async function pedir(ruta, { body, ...opciones } = {}) {
+    if (!API_URL) {
+        throw new Error("Falta la variable VITE_API_URL: la aplicacion no sabe donde esta la API.");
+    }
     const respuesta = await fetch(API_URL + ruta, {
         ...opciones,
         ...(body !== undefined && {
