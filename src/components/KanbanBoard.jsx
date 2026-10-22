@@ -17,7 +17,7 @@ function KanbanBoard({ orders, onMove }) {
     const statuses = Object.entries(STATUS_LABELS);
 
     return (
-        <div className="grid grid-cols-[repeat(4,minmax(300px,1fr))] gap-8 overflow-x-auto rounded-xl bg-[radial-gradient(circle_at_25%_0%,var(--color-board-from),var(--color-board)_75%)] p-6">
+        <div className="grid grid-cols-[repeat(4,minmax(300px,1fr))] gap-8 overflow-x-auto rounded-xl bg-[radial-gradient(circle_at_25%_0%,var(--color-brand-700),var(--color-brand-950)_75%)] p-6">
             {statuses.map(([status, label], index) => {
                 const column = orders.filter((order) => order.status === status);
                 const isLast = index === statuses.length - 1;
@@ -39,12 +39,12 @@ function KanbanBoard({ orders, onMove }) {
                     >
                         {/* The line after the header joins the columns, like a flow. */}
                         <header
-                            className={`relative mb-4 flex items-center justify-between rounded-xl bg-board px-5 py-4 text-white ${
+                            className={`relative mb-4 flex items-center justify-between rounded-xl bg-brand-950 px-5 py-4 text-white ${
                                 isLast ? "" : "after:absolute after:left-full after:top-1/2 after:h-px after:w-8 after:bg-white/35"
                             }`}
                         >
                             <h2 className="m-0 text-lg font-semibold">{label}</h2>
-                            <span className="min-w-7 rounded-lg bg-board-chip px-2 py-0.5 text-center text-sm font-bold text-board-chip-text">
+                            <span className="min-w-7 rounded-lg bg-brand-100 px-2 py-0.5 text-center text-sm font-bold text-brand-700">
                                 {column.length}
                             </span>
                         </header>

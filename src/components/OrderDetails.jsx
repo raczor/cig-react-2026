@@ -39,7 +39,7 @@ function OrderDetails({ order }) {
             </dl>
 
             {hours > 8 && (
-                <p className="mt-3 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+                <p className="mt-3 inline-block rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-800">
                     Jornada extendida
                 </p>
             )}

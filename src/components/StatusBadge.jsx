@@ -1,10 +1,10 @@
 import { STATUS_LABELS } from "../data/catalogs.js";
 
 const CLASS_NAMES = {
-    pending: "bg-amber-100 text-amber-800",
-    in_progress: "bg-sky-100 text-sky-800",
-    completed: "bg-emerald-100 text-emerald-800",
-    cancelled: "bg-rose-100 text-rose-800",
+    pending: "bg-brand-50 text-brand-700 ring-1 ring-brand-300 ring-inset",
+    in_progress: "bg-brand-200 text-brand-900",
+    completed: "bg-brand-600 text-white",
+    cancelled: "bg-slate-200 text-slate-600",
 };
 
 function StatusBadge({ status }) {

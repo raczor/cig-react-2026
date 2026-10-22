@@ -3,7 +3,7 @@ import StatusBadge from "./StatusBadge.jsx";
 import Button from "./ui/Button.jsx";
 import { CATEGORY_LABELS, STATUS_LABELS } from "../data/catalogs.js";
 
-const AVATAR_COLORS = ["#5b6ee1", "#e07a5f", "#3d9970", "#b565a7", "#d99a2b", "#2a9d8f"];
+const AVATAR_COLORS = ["#255b96", "#2f74ba", "#1d4777", "#15335a", "#1f67ae"];
 
 // Initials on a color derived from the name, so the same person always looks the same.
 function Avatar({ name }) {
@@ -57,7 +57,7 @@ function KanbanCard({ order, onMove }) {
             <p className="mb-2 flex items-center gap-2">
                 <span
                     aria-hidden="true"
-                    className="inline-flex size-7 items-center justify-center rounded-lg bg-board-chip text-board-chip-text"
+                    className="inline-flex size-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700"
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
