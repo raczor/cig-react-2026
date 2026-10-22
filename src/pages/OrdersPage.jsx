@@ -2,7 +2,9 @@ import { useSearchParams } from "react-router-dom";
 import KanbanBoard from "../components/KanbanBoard.jsx";
 import { DEPARTMENTS } from "../data/catalogs.js";
 import { useOrders, useChangeStatus } from "../hooks/useOrders.js";
-import "./OrdersPage.css";
+import Alert from "../components/ui/Alert.jsx";
+import Button from "../components/ui/Button.jsx";
+import { controlClass } from "../components/ui/styles.js";
 
 // Strips accents and case so "Panajachel" matches "panajachel" and "Sacatepéquez" matches "sacatepequez".
 function normalize(text) {
@@ -52,18 +54,20 @@ function OrdersPage() {
 
     const hasFilters = search !== "" || department !== "";
 
+    const selectClass = `${controlClass} !w-auto min-w-44 !py-1.5 font-normal`;
+
     return (
         <>
-            <div className="toolbar">
-                <p className="toolbar__count">
+            <div className="mb-4 flex flex-wrap items-end gap-x-6 gap-y-2">
+                <p className="m-0 min-w-48 flex-1 self-center">
                     {visibleOrders.length} de {orders.length} órdenes
                     {search && <> para <strong>&ldquo;{search}&rdquo;</strong></>}
                 </p>
 
-                <label className="toolbar__control">
+                <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
                     Departamento
                     <select
-                        className="field__control"
+                        className={selectClass}
                         value={department}
                         onChange={(event) => setFilter("department", event.target.value)}
                     >
@@ -74,10 +78,10 @@ function OrdersPage() {
                     </select>
                 </label>
 
-                <label className="toolbar__control">
+                <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
                     Ordenar por
                     <select
-                        className="field__control"
+                        className={selectClass}
                         value={sort}
                         onChange={(event) => setFilter("sort", event.target.value)}
                     >
@@ -88,26 +92,24 @@ function OrdersPage() {
                 </label>
 
                 {hasFilters && (
-                    <button type="button" className="toolbar__clear" onClick={() => setParams({}, { replace: true })}>
+                    <Button variant="secondary" size="sm" onClick={() => setParams({}, { replace: true })}>
                         Limpiar filtros
-                    </button>
+                    </Button>
                 )}
             </div>
 
-            {notice && <p className="message message--error" role="alert">{notice}</p>}
+            {notice && <Alert variant="error" className="mb-4">{notice}</Alert>}
 
             {isPending ? (
-                <p className="message message--loading">Cargando órdenes...</p>
+                <Alert>Cargando órdenes...</Alert>
             ) : !data ? (
                 // Only without data does the error replace the board; if a refetch
                 // fails later, TanStack Query keeps the previous list.
-                <div className="message message--error" role="alert">
-                    <p>No se pudo cargar: {error.message}</p>
-                    <p>Revisa que la terminal de npm run api siga corriendo.</p>
-                    <button className="button" type="button" onClick={() => refetch()}>
-                        Reintentar
-                    </button>
-                </div>
+                <Alert variant="error">
+                    <p className="mb-2">No se pudo cargar: {error.message}</p>
+                    <p className="mb-3">Revisa que la terminal de npm run api siga corriendo.</p>
+                    <Button onClick={() => refetch()}>Reintentar</Button>
+                </Alert>
             ) : (
                 <KanbanBoard orders={visibleOrders} onMove={changeStatus} />
             )}

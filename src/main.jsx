@@ -4,9 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.jsx";
 
-// Order matters: variables first, global.css uses them.
-import "./styles/variables.css";
-import "./styles/global.css";
+import "./styles/index.css";
 
 // retry: 1 surfaces an error after one retry (the default is 3).
 const queryClient = new QueryClient({

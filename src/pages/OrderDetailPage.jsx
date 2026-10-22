@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Panel from "../components/Panel.jsx";
-import OrderCard from "../components/OrderCard.jsx";
+import OrderDetails from "../components/OrderDetails.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import Button from "../components/ui/Button.jsx";
+import { buttonClass } from "../components/ui/styles.js";
 import { useOrder, useDeleteOrder } from "../hooks/useOrders.js";
 
 function OrderDetailPage() {
@@ -15,15 +18,15 @@ function OrderDetailPage() {
     const deletion = useDeleteOrder();
 
     if (isPending) {
-        return <p className="message message--loading">Cargando orden...</p>;
+        return <Alert>Cargando orden...</Alert>;
     }
 
     if (error) {
         return (
-            <div className="message message--error" role="alert">
-                <p>No se pudo cargar la orden {id}: {error.message}</p>
-                <Link to="/">Volver al listado</Link>
-            </div>
+            <Alert variant="error">
+                <p className="mb-2">No se pudo cargar la orden {id}: {error.message}</p>
+                <Link to="/" className="underline">Volver al tablero</Link>
+            </Alert>
         );
     }
 
@@ -44,14 +47,14 @@ function OrderDetailPage() {
 
     return (
         <Panel title={`Orden ${order.code}`}>
-            {notice && <p className="message message--error" role="alert">{notice}</p>}
+            {notice && <Alert variant="error" className="mb-4">{notice}</Alert>}
 
-            <OrderCard order={order} open />
+            <OrderDetails order={order} />
 
-            <div className="detail__actions">
+            <div className="mt-4 flex flex-wrap gap-2">
                 {/* Going back (-1) keeps the list filters, which live in the URL. */}
                 <Link
-                    className="button button--secondary"
+                    className={buttonClass({ variant: "secondary" })}
                     to="/"
                     onClick={(event) => {
                         if (!hasHistory) return;
@@ -61,12 +64,12 @@ function OrderDetailPage() {
                 >
                     Volver
                 </Link>
-                <Link className="button" to={`/orders/${order.id}/edit`}>
+                <Link className={buttonClass()} to={`/orders/${order.id}/edit`}>
                     Editar
                 </Link>
-                <button className="button button--danger" type="button" onClick={remove}>
+                <Button variant="danger" onClick={remove}>
                     Eliminar
-                </button>
+                </Button>
             </div>
         </Panel>
     );

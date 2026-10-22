@@ -1,6 +1,6 @@
 # Serviclima service orders
 
-Panel for registering, filtering, editing and moving service orders across a status board. React 19, Vite, React Router and TanStack Query on the front end; json-server as the API. The UI is in Spanish.
+Panel for registering, filtering, editing and moving service orders across a status board. React 19, Vite, Tailwind CSS 4, React Router and TanStack Query on the front end; json-server as the API. The UI is in Spanish.
 
 ## Getting started
 
@@ -27,12 +27,13 @@ npm run dev   # terminal 2: app on http://localhost:5173
 api/             Serverless json-server for Vercel
 db.json          Seed data
 src/
-  components/    Reusable UI (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
+  components/    App components (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
+  components/ui/ Shared look: Button, Card, Alert, class helpers (buttonClass, controlClass)
   pages/         One component per route
   hooks/         TanStack Query hooks (useOrders.js)
   services/      HTTP calls (the only place that uses fetch)
   data/          Departments, category and status labels
-  styles/        CSS variables and global styles
+  styles/        Tailwind entry and design tokens (index.css)
 ```
 
 ## Routes

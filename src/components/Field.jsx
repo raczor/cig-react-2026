@@ -2,13 +2,13 @@
 // the control references with aria-describedby (see OrderForm).
 function Field({ label, name, error, children }) {
     return (
-        <div className="field">
-            <label className="field__label" htmlFor={`field-${name}`}>
+        <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor={`field-${name}`}>
                 {label}
             </label>
             {children}
             {error && (
-                <p className="field__error" id={`field-${name}-error`}>
+                <p className="mt-1 text-xs text-rose-700" id={`field-${name}-error`}>
                     {error}
                 </p>
             )}

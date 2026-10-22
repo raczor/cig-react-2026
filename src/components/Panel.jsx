@@ -1,11 +1,11 @@
-import "./Panel.css";
+import Card from "./ui/Card.jsx";
 
 function Panel({ title, children }) {
     return (
-        <section className="panel">
-            <h2 className="panel__title">{title}</h2>
+        <Card className="mb-4 p-6">
+            <h2 className="mb-4 text-xl font-semibold">{title}</h2>
             {children}
-        </section>
+        </Card>
     );
 }
 

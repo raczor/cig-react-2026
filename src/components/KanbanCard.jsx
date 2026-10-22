@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge.jsx";
+import Button from "./ui/Button.jsx";
 import { CATEGORY_LABELS, STATUS_LABELS } from "../data/catalogs.js";
 
 const AVATAR_COLORS = ["#5b6ee1", "#e07a5f", "#3d9970", "#b565a7", "#d99a2b", "#2a9d8f"];
@@ -14,7 +15,11 @@ function Avatar({ name }) {
         .toUpperCase();
     const hash = [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0);
     return (
-        <span className="kcard__avatar" style={{ backgroundColor: AVATAR_COLORS[hash % AVATAR_COLORS.length] }} aria-hidden="true">
+        <span
+            className="inline-flex size-[22px] items-center justify-center rounded-full text-[0.65rem] font-bold text-white"
+            style={{ backgroundColor: AVATAR_COLORS[hash % AVATAR_COLORS.length] }}
+            aria-hidden="true"
+        >
             {initials}
         </span>
     );
@@ -31,47 +36,56 @@ function KanbanCard({ order, onMove }) {
     }
 
     return (
-        <article className="kcard" draggable onDragStart={handleDragStart}>
-            <header className="kcard__header">
-                <h3 className="kcard__title">
-                    <Link to={`/orders/${id}`}>Orden {code}</Link>
+        <article
+            draggable
+            onDragStart={handleDragStart}
+            className="cursor-grab rounded-xl bg-white p-4 text-slate-600 shadow-sm active:cursor-grabbing"
+        >
+            <header className="mb-1.5 flex items-baseline justify-between gap-2">
+                <h3 className="m-0 whitespace-nowrap text-[0.95rem] font-bold">
+                    <Link to={`/orders/${id}`} className="text-slate-900 hover:underline">
+                        Orden {code}
+                    </Link>
                 </h3>
-                <span className="kcard__amount">
+                <span className="whitespace-nowrap text-[0.95rem] font-bold text-slate-900">
                     Q {amount.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
             </header>
 
-            <p className="kcard__type">Tipo: {CATEGORY_LABELS[category] ?? category}</p>
+            <p className="mb-2">Tipo: {CATEGORY_LABELS[category] ?? category}</p>
 
-            <p className="kcard__department">
-                <span className="kcard__icon" aria-hidden="true">
+            <p className="mb-2 flex items-center gap-2">
+                <span
+                    aria-hidden="true"
+                    className="inline-flex size-7 items-center justify-center rounded-lg bg-board-chip text-board-chip-text"
+                >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6" />
                     </svg>
                 </span>
-                Departamento: <strong>{department}</strong>
+                Departamento: <strong className="text-slate-900">{department}</strong>
             </p>
 
-            <p className="kcard__row">
+            <p className="mb-2 flex items-center gap-2">
                 Estado <StatusBadge status={status} />
             </p>
 
-            <p className="kcard__row kcard__row--person">
+            <p className="mb-2 flex items-center gap-2">
                 Técnico <Avatar name={technician} /> {technician}
             </p>
 
-            <div className="kcard__actions">
+            <div className="mt-1 flex flex-wrap items-center gap-2">
                 {canComplete && (
-                    <button type="button" className="kcard__complete" onClick={() => onMove(id, "completed")}>
+                    <Button variant="secondary" size="sm" onClick={() => onMove(id, "completed")}>
                         Completar
-                    </button>
+                    </Button>
                 )}
                 <select
-                    className="kcard__move"
                     aria-label={`Mover la orden ${code} a`}
                     value=""
                     onChange={(event) => onMove(id, event.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
                 >
                     <option value="" disabled>Mover a...</option>
                     {Object.entries(STATUS_LABELS)
