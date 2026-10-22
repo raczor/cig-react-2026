@@ -3,8 +3,7 @@ import BarraFiltros from "../components/BarraFiltros.jsx";
 import Panel from "../components/Panel.jsx";
 import ResumenOrdenes from "../components/ResumenOrdenes.jsx";
 import ListaOrdenes from "../components/ListaOrdenes.jsx";
-import { useFetch } from "../hooks/useFetch.js";
-import { obtenerOrdenes, cambiarEstado } from "../services/ordenes.js";
+import { useOrdenes, useCompletarOrden } from "../hooks/useOrdenes.js";
 
 // Vista de la ruta "/". Es la App de la sesion 4 casi sin cambios:
 // se movio aqui, sin la cabecera (ahora en Layout) y sin el formulario
@@ -22,48 +21,19 @@ const COMPARADORES = {
 };
 
 function ListadoOrdenes() {
-    // Carga desde la API. Cada vez que esta vista se monta (por ejemplo, al
-    // volver de registrar una orden) se pide la lista otra vez.
-    const {
-        datos,
-        setDatos: setOrdenes,
-        cargando,
-        error,
-        recargar,
-    } = useFetch(obtenerOrdenes);
+    // isPending: todavia no hay datos. error es un objeto Error.
+    // refetch repite la peticion (el boton Reintentar).
+    const { data, isPending, error, refetch } = useOrdenes();
+    const { completar, aviso } = useCompletarOrden();
 
-    // datos es null mientras carga: la lista recibe [] para que .map no falle.
-    const ordenes = datos ?? [];
+    // data es undefined mientras carga: la lista recibe [] para que .map no falle.
+    const ordenes = data ?? [];
 
     // Filtros: estado local de esta vista. Al navegar a otra ruta la vista se
     // desmonta y los filtros se pierden (se resuelve en la sesion 6).
     const [busqueda, setBusqueda] = useState("");
     const [departamento, setDepartamento] = useState("");
     const [criterio, setCriterio] = useState("fecha");
-
-    // Mensaje cuando una escritura falla.
-    const [aviso, setAviso] = useState(null);
-
-    // COMPLETAR, version optimista: la pantalla cambia primero y, si el
-    // servidor no confirma, se vuelve al valor anterior.
-    async function completarOrden(id) {
-        const respaldo = ordenes; // foto antes del cambio
-        setAviso(null);
-
-        // 1. La etiqueta cambia sin esperar a la red.
-        setOrdenes((anteriores) =>
-            anteriores.map((o) => (o.id === id ? { ...o, estado: "completada" } : o))
-        );
-
-        try {
-            // 2. PATCH: solo viaja el campo estado.
-            await cambiarEstado(id, "completada");
-        } catch (err) {
-            // 3. La escritura fallo: se revierte y se avisa.
-            setOrdenes(respaldo);
-            setAviso(`No se pudo completar la orden: ${err.message}`);
-        }
-    }
 
     // DERIVADO: se calcula en cada render. No se guarda en otro useState.
     // [...ordenes] copia el arreglo antes de ordenar: sort modifica el original.
@@ -93,24 +63,26 @@ function ListadoOrdenes() {
                     onCriterioChange={setCriterio}
                 />
 
+                {/* Completar es optimista (ver useCompletarOrden): si el servidor
+                    falla, la orden vuelve a su estado y aqui se avisa. */}
                 {aviso && <p className="mensaje mensaje--error aviso">{aviso}</p>}
 
                 {/* Los cuatro estados, en este orden: cargando, error, vacio, con datos.
             El vacio lo resuelve ListaOrdenes con su salida temprana. */}
-                {cargando ? (
+                {isPending ? (
                     <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
-                ) : error ? (
+                ) : !data ? (
                     <div className="mensaje mensaje--error">
-                        <p>No se pudo cargar: {error}</p>
+                        <p>No se pudo cargar: {error.message}</p>
                         <p>Revise que la terminal de npm run api siga corriendo.</p>
-                        <button className="boton" type="button" onClick={recargar}>
+                        <button className="boton" type="button" onClick={() => refetch()}>
                             Reintentar
                         </button>
                     </div>
                 ) : (
                     <ListaOrdenes
                         ordenes={ordenesVisibles}
-                        onCompletar={completarOrden}
+                        onCompletar={completar}
                         mensajeVacio="Ninguna orden coincide con los filtros."
                     />
                 )}

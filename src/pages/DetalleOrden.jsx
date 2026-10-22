@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Panel from "../components/Panel.jsx";
 import TarjetaOrden from "../components/TarjetaOrden.jsx";
-import { useFetch } from "../hooks/useFetch.js";
-import { obtenerOrden, eliminarOrden } from "../services/ordenes.js";
+import { useOrden, useEliminarOrden } from "../hooks/useOrdenes.js";
 
 // Vista de la ruta /ordenes/:id
 function DetalleOrden() {
@@ -12,12 +11,12 @@ function DetalleOrden() {
     const navigate = useNavigate();
     const [aviso, setAviso] = useState(null);
 
-    // El mismo hook del listado, ahora con obtenerOrden y el id.
-    // Si el id de la URL cambia, la peticion se repite.
-    const { datos: orden, cargando, error } = useFetch(obtenerOrden, id);
+    // Si el id de la URL cambia, la consulta se repite.
+    const { data: orden, isPending, error } = useOrden(id);
+    const eliminarMutacion = useEliminarOrden();
 
     // Los hooks van ANTES de cualquier return temprano.
-    if (cargando) {
+    if (isPending) {
         return <p className="mensaje mensaje--cargando">Cargando orden...</p>;
     }
 
@@ -25,7 +24,7 @@ function DetalleOrden() {
         // /ordenes/99: la ruta SI coincide; el 404 lo responde la API.
         return (
             <div className="mensaje mensaje--error">
-                <p>No se pudo cargar la orden {id}: {error}</p>
+                <p>No se pudo cargar la orden {id}: {error.message}</p>
                 <Link to="/">Volver al listado</Link>
             </div>
         );
@@ -39,7 +38,7 @@ function DetalleOrden() {
 
         setAviso(null);
         try {
-            await eliminarOrden(orden.id); // DELETE /ordenes/8
+            await eliminarMutacion.mutateAsync(orden.id); // DELETE /ordenes/8
             // replace: Atras no regresa a una orden que ya no existe.
             navigate("/", { replace: true });
         } catch (err) {

@@ -86,17 +86,14 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
         setErrorEnvio(null);
         try {
             await onGuardar(convertir(datos));
-            // Si salio bien, la pagina navega a otra ruta y este formulario
-            // se desmonta: no hace falta limpiarlo.
-            // 5. Limpiar el formulario.
-            setDatos(VACIO);
+            // 5. Limpiar solo si se guardo. Va dentro del try: si onGuardar
+            //    falla, salta al catch y lo escrito se conserva para reintentar.
+            setDatos(inicial);
         } catch (err) {
-            // Fallo: los datos escritos se conservan para reintentar.
             setErrorEnvio(err.message);
         } finally {
             setEnviando(false);
         }
-
     }
 
     return (

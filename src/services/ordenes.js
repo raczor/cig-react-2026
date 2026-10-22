@@ -6,14 +6,20 @@
 // En la sesion 6 se cambia solo .env para apuntar a la API alojada.
 const API_URL = import.meta.env.VITE_API_URL;
 
+// ─── Cliente HTTP ─────────────────────────────────────────────
+
 // Todas las llamadas pasan por aqui: un solo fetch, una sola revision de ok.
-// opciones trae method y body; headers se agrega siempre.
-async function pedir(ruta, opciones = {}) {
+// body llega como objeto y se convierte a JSON aqui. La cabecera solo viaja
+// cuando hay cuerpo: en un GET dispararia una peticion OPTIONS extra (CORS).
+async function pedir(ruta, { body, ...opciones } = {}) {
     const respuesta = await fetch(API_URL + ruta, {
-        // Sin esta cabecera json-server no interpreta el cuerpo y guarda
-        // una orden que solo tiene id.
-        headers: { "Content-Type": "application/json" },
         ...opciones,
+        ...(body !== undefined && {
+            // Sin esta cabecera json-server no interpreta el cuerpo y guarda
+            // una orden que solo tiene id.
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        }),
     });
 
     // fetch solo rechaza cuando no hubo respuesta (backend apagado, sin red).
@@ -23,53 +29,45 @@ async function pedir(ruta, opciones = {}) {
         throw new Error(`El servidor respondio ${respuesta.status}`);
     }
 
-    // json() tambien es asincrono: convierte el cuerpo de texto en objetos.
     // json-server responde con JSON incluso en DELETE ({}).
     return respuesta.json();
 }
 
+// Un metodo por verbo HTTP: los servicios no repiten method ni JSON.stringify.
+const api = {
+    get: (ruta, { signal } = {}) => pedir(ruta, { signal }),
+    post: (ruta, body) => pedir(ruta, { method: "POST", body }),
+    put: (ruta, body) => pedir(ruta, { method: "PUT", body }),
+    patch: (ruta, body) => pedir(ruta, { method: "PATCH", body }),
+    delete: (ruta) => pedir(ruta, { method: "DELETE" }),
+};
+
+// ─── Ordenes ──────────────────────────────────────────────────
+
 // GET /ordenes: el arreglo completo.
-export const obtenerOrdenes = () => pedir("/ordenes");
+// Recibe { signal } con la misma forma que TanStack Query entrega a queryFn,
+// por eso se puede pasar directo como queryFn sin una flecha intermedia.
+export const obtenerOrdenes = ({ signal } = {}) => api.get("/ordenes", { signal });
 
 // GET /ordenes/8: una orden. Si no existe, el servidor responde 404.
-export const obtenerOrden = (id) => pedir(`/ordenes/${id}`);
+export const obtenerOrden = (id, { signal } = {}) => api.get(`/ordenes/${id}`, { signal });
 
 // POST /ordenes y despues PATCH del codigo.
 // El id lo asigna json-server (el mayor + 1) y el codigo depende del id,
 // por eso se arma cuando el POST ya respondio.
 // En un backend real el codigo lo generaria el servidor.
 export async function crearOrden(datos) {
-    // 1. POST sin id: el cuerpo viaja como texto JSON.
-    const creada = await pedir("/ordenes", {
-        method: "POST",
-        body: JSON.stringify({ ...datos, estado: "pendiente" }),
-    });
-
-    // 2. Con el id ya conocido se arma el codigo: 25 => OS-2026-025.
-    const codigo = "OS-2026-" + String(creada.id).padStart(3, "0");
-
-    // 3. PATCH: solo viaja el campo que faltaba. Devuelve la orden completa.
-    return pedir(`/ordenes/${creada.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ codigo }),
-    });
+    const creada = await api.post("/ordenes", { ...datos, estado: "pendiente" });
+    const codigo = "OS-2026-" + String(creada.id).padStart(3, "0"); // 25 => OS-2026-025
+    return api.patch(`/ordenes/${creada.id}`, { codigo });
 }
 
 // PUT /ordenes/8: REEMPLAZA la orden completa. Lo que no venga en el
 // cuerpo se pierde, por eso se usa solo con el formulario de edicion lleno.
-export const actualizarOrden = (id, orden) =>
-    pedir(`/ordenes/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(orden),
-    });
+export const actualizarOrden = (id, orden) => api.put(`/ordenes/${id}`, orden);
 
 // PATCH /ordenes/8: COMBINA. Solo cambia el campo estado.
-export const cambiarEstado = (id, estado) =>
-    pedir(`/ordenes/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ estado }),
-    });
+export const cambiarEstado = (id, estado) => api.patch(`/ordenes/${id}`, { estado });
 
 // DELETE /ordenes/8: json-server responde 200 con {}.
-export const eliminarOrden = (id) =>
-    pedir(`/ordenes/${id}`, { method: "DELETE" });
+export const eliminarOrden = (id) => api.delete(`/ordenes/${id}`);
