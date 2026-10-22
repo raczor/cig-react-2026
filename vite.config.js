@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
 
   // SESION 6 - DESPLIEGUE
-  // GitHub Pages publica en https://jinchuika.github.io/cig-react-2026/
+  // GitHub Pages publica en https://<usuario>.github.io/<repositorio>/
   // El workflow (.github/workflows/deploy.yml) envia BASE_PATH con ese nombre.
   // En su computadora BASE_PATH no existe y se usa "/".
   // Sin esto la pagina publicada carga en blanco.

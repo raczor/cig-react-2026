@@ -50,6 +50,7 @@ Esta es la lista completa. No se necesita ningún otro comando durante el curso.
 | `npm run api` | Levanta el backend local en el puerto 3001 | Sesión 4 |
 | `npm run build` | Genera la versión de producción en `dist` | Sesión 6 |
 | `npm run preview` | Sirve localmente lo generado por `npm run build` | Sesión 6 |
+| `npm run lint` | Revisa el código con ESLint (también corre en el despliegue) | Después del curso |
 
 ### La regla de las dos terminales
 
@@ -84,7 +85,7 @@ react-2026/
     ├── services/         Funciones que hablan con la API (sesión 4)
     ├── hooks/            Hooks propios (sesión 4)
     ├── context/          Estado compartido (sesión 6)
-    ├── data/             Listas cerradas (catalogos.js); datos.js se eliminó en la sesión 5
+    ├── data/             Listas cerradas (catalogos.js); datos.js se eliminó en la sesión 4
     └── styles/           Variables y estilos globales
 ```
 
@@ -120,7 +121,7 @@ Valores posibles:
 
 Los mismos 24 registros están en dos lugares:
 
-- `src/data/datos.js` como arreglo de JavaScript. Se usa en las sesiones 2 y 3, y se elimina en la sesión 4.
+- `src/data/datos.js` como arreglo de JavaScript. Se usó en las sesiones 2 y 3 y se eliminó en la sesión 4.
 - `db.json` como base de datos servida por HTTP. Se usa desde la sesión 4 en adelante.
 
 ---
@@ -145,6 +146,15 @@ Disponibles con `npm run api` corriendo, en `http://localhost:3001`.
 Puede probar cualquier ruta `GET` escribiéndola directamente en el navegador, sin tocar React.
 
 Las escrituras modifican el archivo `db.json` en disco. Si quiere volver al estado original, descarte los cambios de ese archivo desde GitHub Desktop.
+
+---
+
+## Despliegue
+
+La aplicación es estática: `npm run build` genera `dist`. Lo único que cambia entre local y producción es `VITE_API_URL`, que debe apuntar a una API alojada (json-server en `localhost` no sirve para una página publicada).
+
+- **Vercel:** importa el repositorio, framework Vite, y agrega la variable `VITE_API_URL` en Settings > Environment Variables. `vercel.json` redirige todas las rutas a `index.html` para que `/ordenes/8` funcione al recargar.
+- **GitHub Pages:** el workflow `.github/workflows/deploy.yml` corre ESLint, compila y publica. Requiere activar Pages (Source: GitHub Actions) y crear la variable `VITE_API_URL` en Settings > Secrets and variables > Actions > Variables. Envía `BASE_PATH` con el nombre del repositorio y copia `index.html` a `404.html` para las rutas profundas.
 
 ---
 
