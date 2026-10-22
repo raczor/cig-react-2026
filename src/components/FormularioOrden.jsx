@@ -18,13 +18,13 @@ function validar(datos) {
 
     // NIT: digitos, guion opcional y digito verificador (numero o K), o CF.
     const nit = datos.nit.trim().toUpperCase();
-    if (nit === "") errores.nit = "NIT obligatorio. Use CF si no tiene.";
+    if (nit === "") errores.nit = "NIT obligatorio. Usa CF si no tienes.";
     else if (nit !== "CF" && !/^\d{1,12}-?[\dK]$/.test(nit))
         errores.nit = "Formato de NIT: 1234567-8 o CF.";
 
-    if (datos.departamento === "") errores.departamento = "Seleccione un departamento.";
-    if (datos.categoria === "") errores.categoria = "Seleccione una categoria.";
-    if (datos.tecnico.trim() === "") errores.tecnico = "Tecnico obligatorio.";
+    if (datos.departamento === "") errores.departamento = "Selecciona un departamento.";
+    if (datos.categoria === "") errores.categoria = "Selecciona una categoría.";
+    if (datos.tecnico.trim() === "") errores.tecnico = "Técnico obligatorio.";
     if (datos.fecha === "") errores.fecha = "Fecha obligatoria.";
 
     // Number("") es 0 y Number("abc") es NaN: las dos fallan la comparacion.
@@ -69,6 +69,17 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
         setDatos((anteriores) => ({ ...anteriores, [name]: value }));
     }
 
+    // Atributos de accesibilidad de cada control: el id que el label espera y,
+    // si el campo tiene error, aria-invalid y aria-describedby hacia su mensaje.
+    function accesibilidad(nombre) {
+        const conError = Boolean(errores[nombre]);
+        return {
+            id: `campo-${nombre}`,
+            "aria-invalid": conError || undefined,
+            "aria-describedby": conError ? `campo-${nombre}-error` : undefined,
+        };
+    }
+
     async function manejarEnvio(evento) {
         // 1. Sin esto el navegador recarga la pagina y el estado se pierde.
         evento.preventDefault();
@@ -77,8 +88,13 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
         const encontrados = validar(datos);
         setErrores(encontrados);
 
-        // 3. Si hay al menos un error, no se envia nada.
-        if (Object.keys(encontrados).length > 0) return;
+        // 3. Si hay al menos un error, no se envia nada. El foco pasa al primer
+        //    campo invalido: asi un lector de pantalla anuncia su error (aria-describedby).
+        const primero = Object.keys(encontrados)[0];
+        if (primero) {
+            document.getElementById(`campo-${primero}`)?.focus();
+            return;
+        }
 
         // 4. Enviar. El boton queda deshabilitado mientras la peticion viaja:
         //    sin eso, un doble clic registra la orden dos veces.
@@ -99,59 +115,59 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
     return (
         // noValidate: la validacion la hace React, no el navegador.
         <form className="formulario" onSubmit={manejarEnvio} noValidate>
-            <Campo etiqueta="Cliente" error={errores.cliente}>
-                <input className="campo__control" name="cliente"
+            <Campo etiqueta="Cliente" nombre="cliente" error={errores.cliente}>
+                <input className="campo__control" name="cliente" {...accesibilidad("cliente")}
                     value={datos.cliente} onChange={manejarCambio} />
             </Campo>
 
-            <Campo etiqueta="NIT" error={errores.nit}>
-                <input className="campo__control" name="nit" placeholder="1234567-8 o CF"
+            <Campo etiqueta="NIT" nombre="nit" error={errores.nit}>
+                <input className="campo__control" name="nit" {...accesibilidad("nit")} placeholder="1234567-8 o CF"
                     value={datos.nit} onChange={manejarCambio} />
             </Campo>
 
-            <Campo etiqueta="Departamento" error={errores.departamento}>
-                <select className="campo__control" name="departamento"
+            <Campo etiqueta="Departamento" nombre="departamento" error={errores.departamento}>
+                <select className="campo__control" name="departamento" {...accesibilidad("departamento")}
                     value={datos.departamento} onChange={manejarCambio}>
-                    <option value="">Seleccione</option>
+                    <option value="">Selecciona</option>
                     {DEPARTAMENTOS.map((nombre) => (
                         <option key={nombre} value={nombre}>{nombre}</option>
                     ))}
                 </select>
             </Campo>
 
-            <Campo etiqueta="Categoria" error={errores.categoria}>
-                <select className="campo__control" name="categoria"
+            <Campo etiqueta="Categoría" nombre="categoria" error={errores.categoria}>
+                <select className="campo__control" name="categoria" {...accesibilidad("categoria")}
                     value={datos.categoria} onChange={manejarCambio}>
-                    <option value="">Seleccione</option>
+                    <option value="">Selecciona</option>
                     {CATEGORIAS.map((nombre) => (
                         <option key={nombre} value={nombre}>{nombre}</option>
                     ))}
                 </select>
             </Campo>
 
-            <Campo etiqueta="Tecnico" error={errores.tecnico}>
-                <input className="campo__control" name="tecnico"
+            <Campo etiqueta="Técnico" nombre="tecnico" error={errores.tecnico}>
+                <input className="campo__control" name="tecnico" {...accesibilidad("tecnico")}
                     value={datos.tecnico} onChange={manejarCambio} />
             </Campo>
 
-            <Campo etiqueta="Fecha" error={errores.fecha}>
+            <Campo etiqueta="Fecha" nombre="fecha" error={errores.fecha}>
                 {/* type="date" entrega texto ISO: "2026-10-14" */}
-                <input className="campo__control" name="fecha" type="date"
+                <input className="campo__control" name="fecha" {...accesibilidad("fecha")} type="date"
                     value={datos.fecha} onChange={manejarCambio} />
             </Campo>
 
-            <Campo etiqueta="Horas" error={errores.horas}>
-                <input className="campo__control" name="horas" type="number"
+            <Campo etiqueta="Horas" nombre="horas" error={errores.horas}>
+                <input className="campo__control" name="horas" {...accesibilidad("horas")} type="number"
                     min="0" step="0.25" value={datos.horas} onChange={manejarCambio} />
             </Campo>
 
-            <Campo etiqueta="Monto (Q)" error={errores.monto}>
-                <input className="campo__control" name="monto" type="number"
+            <Campo etiqueta="Monto (Q)" nombre="monto" error={errores.monto}>
+                <input className="campo__control" name="monto" {...accesibilidad("monto")} type="number"
                     min="0" step="0.01" value={datos.monto} onChange={manejarCambio} />
             </Campo>
 
             {errorEnvio && (
-                <p className="mensaje mensaje--error formulario__error">
+                <p className="mensaje mensaje--error formulario__error" role="alert">
                     No se pudo guardar: {errorEnvio}
                 </p>
             )}

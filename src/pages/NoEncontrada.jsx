@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 function NoEncontrada() {
     return (
         <div className="mensaje mensaje--vacio">
-            <p>La pagina solicitada no existe.</p>
+            <p>La página solicitada no existe.</p>
             <Link to="/">Volver al listado</Link>
         </div>
     );
