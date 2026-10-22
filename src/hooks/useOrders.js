@@ -69,11 +69,11 @@ export function useDeleteOrder() {
   });
 }
 
-// Optimistic: the order is marked completed before the server answers.
-// If the PATCH fails, only that order is rolled back (so a concurrent
-// completion of another order is not undone) and the list is refetched.
-// Returns { complete, notice }, where notice is the message of the latest failure.
-export function useCompleteOrder() {
+// Optimistic: the order moves to the new status before the server answers.
+// If the PATCH fails, only that order is rolled back (so a concurrent change
+// to another order is not undone) and the list is refetched.
+// Returns { changeStatus(id, status), notice }, where notice is the message of the latest failure.
+export function useChangeStatus() {
   const queryClient = useQueryClient();
   // useMutation only reflects the LAST call, so the failure message is kept
   // here: onError runs for every call.
@@ -83,25 +83,25 @@ export function useCompleteOrder() {
     updateList((list) => list.map((o) => (o.id === order.id ? order : o)));
 
   const mutation = useMutation({
-    mutationFn: (id) => changeStatus(id, "completed"),
+    mutationFn: ({ id, status }) => changeStatus(id, status),
 
-    onMutate: async (id) => {
+    onMutate: async ({ id, status }) => {
       setNotice(null);
       // An in-flight GET that lands after the optimistic update would erase it.
       await queryClient.cancelQueries({ queryKey: ordersQuery.queryKey });
       const previous = queryClient.getQueryData(ordersQuery.queryKey).find((o) => o.id === id);
-      replace({ ...previous, status: "completed" });
+      replace({ ...previous, status });
       return { previous };
     },
 
-    onError: (error, _id, { previous }) => {
+    onError: (error, _variables, { previous }) => {
       replace(previous);
-      setNotice(`No se pudo completar la orden ${previous.code}: ${error.message}`);
+      setNotice(`No se pudo mover la orden ${previous.code}: ${error.message}`);
       queryClient.invalidateQueries({ queryKey: ordersQuery.queryKey });
     },
 
     onSuccess: replace,
   });
 
-  return { complete: mutation.mutate, notice };
+  return { changeStatus: (id, status) => mutation.mutate({ id, status }), notice };
 }

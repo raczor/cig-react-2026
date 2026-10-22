@@ -1,10 +1,10 @@
 import { useSearchParams } from "react-router-dom";
-import FilterBar from "../components/FilterBar.jsx";
-import Panel from "../components/Panel.jsx";
-import OrderSummary from "../components/OrderSummary.jsx";
-import OrderList from "../components/OrderList.jsx";
+import KanbanBoard from "../components/KanbanBoard.jsx";
 import { DEPARTMENTS } from "../data/catalogs.js";
-import { useOrders, useCompleteOrder } from "../hooks/useOrders.js";
+import { useOrders, useChangeStatus } from "../hooks/useOrders.js";
+import Alert from "../components/ui/Alert.jsx";
+import Button from "../components/ui/Button.jsx";
+import { selectClass } from "../components/ui/styles.js";
 
 // Strips accents and case so "Panajachel" matches "panajachel" and "Sacatepéquez" matches "sacatepequez".
 function normalize(text) {
@@ -19,11 +19,11 @@ const SORTERS = {
 
 function OrdersPage() {
     const { data, isPending, error, refetch } = useOrders();
-    const { complete, notice } = useCompleteOrder();
+    const { changeStatus, notice } = useChangeStatus();
     const orders = data ?? [];
 
     // Filters live in the URL (?q=&department=&sort=) so they survive visiting
-    // a detail page and can be shared.
+    // a detail page and can be shared. q is set by the search box in the top bar.
     const [params, setParams] = useSearchParams();
     const search = params.get("q") ?? "";
     const requestedDepartment = params.get("department");
@@ -31,7 +31,7 @@ function OrdersPage() {
     const requestedSort = params.get("sort");
     const sort = Object.hasOwn(SORTERS, requestedSort) ? requestedSort : "date";
 
-    // An empty value removes the param. `replace` keeps typing out of the history stack.
+    // An empty value removes the param. `replace` keeps changes out of the history stack.
     function setFilter(key, value) {
         setParams(
             (previous) => {
@@ -52,44 +52,67 @@ function OrdersPage() {
             (order) => normalize(order.code).includes(text) || normalize(order.client).includes(text)
         );
 
+    const hasFilters = search !== "" || department !== "";
+
+    const filterSelectClass = `${selectClass} !w-auto min-w-44 !py-1.5 font-normal`;
+
     return (
         <>
-            <Panel title="Resumen">
-                <OrderSummary orders={visibleOrders} />
-            </Panel>
+            <div className="mb-4 flex flex-wrap items-end gap-x-6 gap-y-2">
+                <p className="m-0 min-w-48 flex-1 self-center">
+                    {visibleOrders.length} de {orders.length} órdenes
+                    {search && <> para <strong>&ldquo;{search}&rdquo;</strong></>}
+                </p>
 
-            <Panel title={`Órdenes registradas (${visibleOrders.length} de ${orders.length})`}>
-                <FilterBar
-                    search={search}
-                    department={department}
-                    sort={sort}
-                    onSearchChange={(value) => setFilter("q", value)}
-                    onDepartmentChange={(value) => setFilter("department", value)}
-                    onSortChange={(value) => setFilter("sort", value)}
-                />
+                <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+                    Departamento
+                    <select
+                        className={filterSelectClass}
+                        value={department}
+                        onChange={(event) => setFilter("department", event.target.value)}
+                    >
+                        <option value="">Todos</option>
+                        {DEPARTMENTS.map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                        ))}
+                    </select>
+                </label>
 
-                {notice && <p className="message message--error" role="alert">{notice}</p>}
+                <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+                    Ordenar por
+                    <select
+                        className={filterSelectClass}
+                        value={sort}
+                        onChange={(event) => setFilter("sort", event.target.value)}
+                    >
+                        <option value="date">Más recientes</option>
+                        <option value="amount">Mayor monto</option>
+                        <option value="code">Código</option>
+                    </select>
+                </label>
 
-                {isPending ? (
-                    <p className="message message--loading">Cargando órdenes...</p>
-                ) : !data ? (
-                    // Only without data does the error replace the list; if a refetch
-                    // fails later, TanStack Query keeps the previous list.
-                    <div className="message message--error" role="alert">
-                        <p>No se pudo cargar: {error.message}</p>
-                        <p>Revisa que la terminal de npm run api siga corriendo.</p>
-                        <button className="button" type="button" onClick={() => refetch()}>
-                            Reintentar
-                        </button>
-                    </div>
-                ) : (
-                    <OrderList
-                        orders={visibleOrders}
-                        onComplete={complete}
-                        emptyMessage="Ninguna orden coincide con los filtros."
-                    />
+                {hasFilters && (
+                    <Button variant="secondary" size="sm" onClick={() => setParams({}, { replace: true })}>
+                        Limpiar filtros
+                    </Button>
                 )}
-            </Panel>
+            </div>
+
+            {notice && <Alert variant="error" className="mb-4">{notice}</Alert>}
+
+            {isPending ? (
+                <Alert>Cargando órdenes...</Alert>
+            ) : !data ? (
+                // Only without data does the error replace the board; if a refetch
+                // fails later, TanStack Query keeps the previous list.
+                <Alert variant="error">
+                    <p className="mb-2">No se pudo cargar: {error.message}</p>
+                    <p className="mb-3">Revisa que la terminal de npm run api siga corriendo.</p>
+                    <Button onClick={() => refetch()}>Reintentar</Button>
+                </Alert>
+            ) : (
+                <KanbanBoard orders={visibleOrders} onMove={changeStatus} />
+            )}
         </>
     );
 }

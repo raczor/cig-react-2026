@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Panel from "../components/Panel.jsx";
 import OrderForm from "../components/OrderForm.jsx";
+import Alert from "../components/ui/Alert.jsx";
 import { useOrder, useUpdateOrder } from "../hooks/useOrders.js";
 
 function EditOrderPage() {
@@ -21,10 +22,10 @@ function EditOrderPage() {
     }
 
     if (isPending) {
-        return <p className="message message--loading">Cargando orden...</p>;
+        return <Alert>Cargando orden...</Alert>;
     }
     if (error) {
-        return <p className="message message--error" role="alert">No se pudo cargar: {error.message}</p>;
+        return <Alert variant="error">No se pudo cargar: {error.message}</Alert>;
     }
 
     return (

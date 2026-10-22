@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Field from "./Field.jsx";
 import { DEPARTMENTS, CATEGORY_LABELS } from "../data/catalogs.js";
-import "./OrderForm.css";
+import Button from "./ui/Button.jsx";
+import Alert from "./ui/Alert.jsx";
+import { controlClass, selectClass } from "./ui/styles.js";
 
 // Inputs always yield strings, even with type="number".
 const EMPTY = {
@@ -94,19 +96,19 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
     }
 
     return (
-        <form className="form" onSubmit={handleSubmit} noValidate>
+        <form className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit} noValidate>
             <Field label="Cliente" name="client" error={errors.client}>
-                <input className="field__control" name="client" {...a11y("client")}
+                <input className={controlClass} name="client" {...a11y("client")}
                     value={values.client} onChange={handleChange} />
             </Field>
 
             <Field label="NIT" name="taxId" error={errors.taxId}>
-                <input className="field__control" name="taxId" {...a11y("taxId")} placeholder="1234567-8 o CF"
+                <input className={controlClass} name="taxId" {...a11y("taxId")} placeholder="1234567-8 o CF"
                     value={values.taxId} onChange={handleChange} />
             </Field>
 
             <Field label="Departamento" name="department" error={errors.department}>
-                <select className="field__control" name="department" {...a11y("department")}
+                <select className={selectClass} name="department" {...a11y("department")}
                     value={values.department} onChange={handleChange}>
                     <option value="">Selecciona</option>
                     {DEPARTMENTS.map((name) => (
@@ -116,7 +118,7 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
             </Field>
 
             <Field label="Categoría" name="category" error={errors.category}>
-                <select className="field__control" name="category" {...a11y("category")}
+                <select className={selectClass} name="category" {...a11y("category")}
                     value={values.category} onChange={handleChange}>
                     <option value="">Selecciona</option>
                     {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
@@ -126,35 +128,35 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
             </Field>
 
             <Field label="Técnico" name="technician" error={errors.technician}>
-                <input className="field__control" name="technician" {...a11y("technician")}
+                <input className={controlClass} name="technician" {...a11y("technician")}
                     value={values.technician} onChange={handleChange} />
             </Field>
 
             <Field label="Fecha" name="date" error={errors.date}>
-                <input className="field__control" name="date" {...a11y("date")} type="date"
+                <input className={controlClass} name="date" {...a11y("date")} type="date"
                     value={values.date} onChange={handleChange} />
             </Field>
 
             <Field label="Horas" name="hours" error={errors.hours}>
-                <input className="field__control" name="hours" {...a11y("hours")} type="number"
+                <input className={controlClass} name="hours" {...a11y("hours")} type="number"
                     min="0" step="0.25" value={values.hours} onChange={handleChange} />
             </Field>
 
             <Field label="Monto (Q)" name="amount" error={errors.amount}>
-                <input className="field__control" name="amount" {...a11y("amount")} type="number"
+                <input className={controlClass} name="amount" {...a11y("amount")} type="number"
                     min="0" step="0.01" value={values.amount} onChange={handleChange} />
             </Field>
 
             {submitError && (
-                <p className="message message--error form__error" role="alert">
+                <Alert variant="error" className="mb-4 sm:col-span-2 lg:col-span-3">
                     No se pudo guardar: {submitError}
-                </p>
+                </Alert>
             )}
 
-            <div className="form__actions">
-                <button className="button" type="submit" disabled={submitting}>
+            <div className="pt-2 text-right sm:col-span-2 lg:col-span-3">
+                <Button type="submit" disabled={submitting}>
                     {submitting ? "Guardando..." : submitLabel}
-                </button>
+                </Button>
             </div>
         </form>
     );

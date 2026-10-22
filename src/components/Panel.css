@@ -1,9 +1,0 @@
-.panel {
-    margin-bottom: var(--space-4);
-}
-
-.panel__title {
-    margin-bottom: var(--space-2);
-    font-size: 1.15rem;
-    color: var(--color-text-muted);
-}
