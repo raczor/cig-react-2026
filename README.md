@@ -153,7 +153,7 @@ Las escrituras modifican el archivo `db.json` en disco. Si quiere volver al esta
 
 La aplicación es estática: `npm run build` genera `dist`. Lo único que cambia entre local y producción es `VITE_API_URL`, que debe apuntar a una API alojada (json-server en `localhost` no sirve para una página publicada).
 
-- **Vercel:** importa el repositorio, framework Vite, y agrega la variable `VITE_API_URL` en Settings > Environment Variables. `vercel.json` redirige todas las rutas a `index.html` para que `/ordenes/8` funcione al recargar.
+- **Vercel:** importa el repositorio (framework Vite) y define `VITE_API_URL=/api`. La carpeta `api/` es una función serverless con json-server que sirve `db.json` en memoria: lo que se cree o edite se pierde al reiniciarse la función, es solo para demostración. `vercel.json` envía `/api/*` a esa función y el resto a `index.html` para que `/ordenes/8` funcione al recargar.
 - **GitHub Pages:** el workflow `.github/workflows/deploy.yml` corre ESLint, compila y publica. Requiere activar Pages (Source: GitHub Actions) y crear la variable `VITE_API_URL` en Settings > Secrets and variables > Actions > Variables. Envía `BASE_PATH` con el nombre del repositorio y copia `index.html` a `404.html` para las rutas profundas.
 
 ---
