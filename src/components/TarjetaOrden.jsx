@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import EtiquetaEstado from "./EtiquetaEstado.jsx";
 import "./TarjetaOrden.css";
 
 // Recibe UNA orden por props. No sabe de donde salio: por eso sirvio igual
 // con datos locales y con datos de la API.
-function TarjetaOrden({ orden, moneda = "Q", onCompletar }) {
+function TarjetaOrden({ orden, moneda = "Q", onCompletar, abierta = false }) {
     // Estado LOCAL: solo esta tarjeta necesita saber si esta expandida.
-    const [expandida, setExpandida] = useState(false);
+    // abierta: el detalle la muestra expandida desde el inicio.
+    const [expandida, setExpandida] = useState(abierta);
 
     // Desestructuracion: cada campo de la orden pasa a ser una constante.
     const { id, codigo, cliente, nit, departamento, categoria, tecnico } = orden;
@@ -24,7 +26,10 @@ function TarjetaOrden({ orden, moneda = "Q", onCompletar }) {
     return (
         <article className="tarjeta">
             <header className="tarjeta__encabezado">
-                <h3 className="tarjeta__codigo">{codigo}</h3>
+                {/* El codigo lleva al detalle. Link, no <a>: no recarga la pagina. */}
+                <h3 className="tarjeta__codigo">
+                    <Link to={`/ordenes/${id}`}>{codigo}</Link>
+                </h3>
                 <EtiquetaEstado estado={estado} />
             </header>
 

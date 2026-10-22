@@ -1,0 +1,26 @@
+/* Navegacion principal. NavLink agrega la clase .active por si solo. */
+
+.navegacion {
+    display: flex;
+    gap: var(--espacio-1);
+    margin-top: var(--espacio-2);
+}
+
+.navegacion__enlace {
+    padding: var(--espacio-1) var(--espacio-2);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio-pequeno);
+    color: var(--color-texto);
+    text-decoration: none;
+}
+
+.navegacion__enlace:hover {
+    border-color: var(--color-acento);
+}
+
+/* Ruta actual */
+.navegacion__enlace.active {
+    background-color: var(--color-acento);
+    border-color: var(--color-acento);
+    color: var(--color-superficie);
+}
