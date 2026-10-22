@@ -53,9 +53,7 @@ a:hover {
 }
 
 .container {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--space-2);
+  padding: var(--space-3);
 }
 
 .button {

@@ -1,5 +1,5 @@
 :root {
-  --color-background: #eaeded;
+  --color-background: #eef2f7;
   --color-surface: #ffffff;
   --color-text: #0f1111;
   --color-text-muted: #565959;
@@ -10,6 +10,17 @@
   --color-nav: #131921;
   --color-nav-secondary: #232f3e;
   --color-nav-text: #ffffff;
+
+  --color-sidebar: #3b86d1;
+  --color-sidebar-hover: #3278bd;
+  --color-sidebar-active: #1f67ae;
+  --color-sidebar-accent: #9bd0ff;
+
+  --color-board-top: #3b45b8;
+  --color-board-bottom: #121538;
+  --color-board-column: #11142f;
+  --color-board-chip: #d9ddff;
+  --color-board-chip-text: #3b45b8;
 
   --color-cta: #ffd814;
   --color-cta-hover: #f7ca00;
