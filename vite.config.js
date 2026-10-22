@@ -5,11 +5,11 @@ export default defineConfig({
   plugins: [react()],
 
   // SESION 6 - DESPLIEGUE
-  // Si publica en Vercel o Netlify, deje "base" como esta.
-  // Si publica en GitHub Pages dentro de un subdirectorio, descomente la linea
-  // siguiente y escriba el nombre exacto de su repositorio entre las barras.
-  // Sin esto la pagina desplegada carga en blanco.
-  // base: "/react-2026/",
+  // GitHub Pages publica en https://jinchuika.github.io/cig-react-2026/
+  // El workflow (.github/workflows/deploy.yml) envia BASE_PATH con ese nombre.
+  // En su computadora BASE_PATH no existe y se usa "/".
+  // Sin esto la pagina publicada carga en blanco.
+  base: process.env.BASE_PATH ?? "/",
 
   server: {
     port: 5173,

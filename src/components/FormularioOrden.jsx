@@ -88,6 +88,8 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
             await onGuardar(convertir(datos));
             // Si salio bien, la pagina navega a otra ruta y este formulario
             // se desmonta: no hace falta limpiarlo.
+            // 5. Limpiar el formulario.
+            setDatos(VACIO);
         } catch (err) {
             // Fallo: los datos escritos se conservan para reintentar.
             setErrorEnvio(err.message);
@@ -95,8 +97,6 @@ function FormularioOrden({ inicial = VACIO, onGuardar, textoBoton = "Guardar" })
             setEnviando(false);
         }
 
-        // 5. Limpiar el formulario.
-        setDatos(VACIO);
     }
 
     return (
