@@ -18,18 +18,19 @@ function OrderDetails({ order }) {
     ];
 
     return (
-        <article className="rounded-xl border border-slate-200 p-4">
-            <header className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <h3 className="m-0 text-lg font-semibold">{code}</h3>
-                    <StatusBadge status={status} />
+        <article>
+            <header className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="m-0 text-2xl font-semibold">Orden {code}</h1>
+                        <StatusBadge status={status} />
+                    </div>
+                    <p className="mt-1 text-base text-slate-600">{client}</p>
                 </div>
-                <p className="m-0 text-2xl font-semibold">Q {localAmount}</p>
+                <p className="m-0 text-3xl font-semibold">Q {localAmount}</p>
             </header>
 
-            <p className="mt-1 text-base font-medium">{client}</p>
-
-            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1">
+            <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-8 gap-y-2 border-t border-slate-200 pt-4">
                 {rows.map(([label, value]) => (
                     <div key={label} className="contents">
                         <dt className="text-slate-500">{label}</dt>
@@ -39,7 +40,7 @@ function OrderDetails({ order }) {
             </dl>
 
             {hours > 8 && (
-                <p className="mt-3 inline-block rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-800">
+                <p className="mt-4 inline-block rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-800">
                     Jornada extendida
                 </p>
             )}
