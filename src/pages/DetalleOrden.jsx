@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Panel from "../components/Panel.jsx";
 import TarjetaOrden from "../components/TarjetaOrden.jsx";
 import { useOrden, useEliminarOrden } from "../hooks/useOrdenes.js";
@@ -9,6 +9,8 @@ function DetalleOrden() {
     // Todo lo que sale de la URL es texto: /ordenes/8 entrega { id: "8" }.
     const { id } = useParams();
     const navigate = useNavigate();
+    // key "default" = primera pagina de la sesion: no hay a donde volver con -1.
+    const hayHistorial = useLocation().key !== "default";
     const [aviso, setAviso] = useState(null);
 
     // Si el id de la URL cambia, la consulta se repite.
@@ -23,7 +25,7 @@ function DetalleOrden() {
     if (error) {
         // /ordenes/99: la ruta SI coincide; el 404 lo responde la API.
         return (
-            <div className="mensaje mensaje--error">
+            <div className="mensaje mensaje--error" role="alert">
                 <p>No se pudo cargar la orden {id}: {error.message}</p>
                 <Link to="/">Volver al listado</Link>
             </div>
@@ -32,7 +34,7 @@ function DetalleOrden() {
 
     async function eliminar() {
         const confirmado = window.confirm(
-            `Se encuentra completamente seguro de eliminar ${orden.codigo}? No se puede deshacer.`
+            `¿Seguro que quieres eliminar ${orden.codigo}? No se puede deshacer.`
         );
         if (!confirmado) return; // Cancelar: no sale ninguna peticion
 
@@ -48,13 +50,22 @@ function DetalleOrden() {
 
     return (
         <Panel titulo={`Orden ${orden.codigo}`}>
-            {aviso && <p className="mensaje mensaje--error">{aviso}</p>}
+            {aviso && <p className="mensaje mensaje--error" role="alert">{aviso}</p>}
 
             {/* La misma tarjeta del listado, abierta con todos los campos */}
             <TarjetaOrden orden={orden} abierta />
 
             <div className="tarjeta__acciones">
-                <Link className="boton boton--secundario" to="/">
+                {/* Atras (-1) conserva los filtros del listado, que viven en la URL */}
+                <Link
+                    className="boton boton--secundario"
+                    to="/"
+                    onClick={(evento) => {
+                        if (!hayHistorial) return;
+                        evento.preventDefault();
+                        navigate(-1);
+                    }}
+                >
                     Volver
                 </Link>
                 <Link className="boton" to={`/ordenes/${orden.id}/editar`}>

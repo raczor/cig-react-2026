@@ -9,7 +9,7 @@ function ResumenOrdenes({ ordenes = [] }) {
     const montoTotal = ordenes.reduce((acumulado, orden) => acumulado + orden.monto, 0);
 
     const indicadores = [
-        { etiqueta: "Ordenes", valor: total },
+        { etiqueta: "Órdenes", valor: total },
         { etiqueta: "Completadas", valor: completadas },
         { etiqueta: "Pendientes", valor: pendientes },
         { etiqueta: "Monto total", valor: "Q " + montoTotal.toLocaleString("es-GT") },

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import BarraFiltros from "../components/BarraFiltros.jsx";
 import Panel from "../components/Panel.jsx";
 import ResumenOrdenes from "../components/ResumenOrdenes.jsx";
 import ListaOrdenes from "../components/ListaOrdenes.jsx";
+import { DEPARTAMENTOS } from "../data/catalogos.js";
 import { useOrdenes, useCompletarOrden } from "../hooks/useOrdenes.js";
 
 // Vista de la ruta "/". Es la App de la sesion 4 casi sin cambios:
@@ -29,11 +30,30 @@ function ListadoOrdenes() {
     // data es undefined mientras carga: la lista recibe [] para que .map no falle.
     const ordenes = data ?? [];
 
-    // Filtros: estado local de esta vista. Al navegar a otra ruta la vista se
-    // desmonta y los filtros se pierden (se resuelve en la sesion 6).
-    const [busqueda, setBusqueda] = useState("");
-    const [departamento, setDepartamento] = useState("");
-    const [criterio, setCriterio] = useState("fecha");
+    // Filtros: viven en la URL (?q=&departamento=&orden=). Sobreviven al ir a
+    // un detalle y volver, y la direccion se puede compartir.
+    const [parametros, setParametros] = useSearchParams();
+    const busqueda = parametros.get("q") ?? "";
+    const pedidoDepto = parametros.get("departamento");
+    // Un departamento que no existe (enlace viejo o mal escrito) se ignora.
+    const departamento = DEPARTAMENTOS.includes(pedidoDepto) ? pedidoDepto : "";
+    const pedido = parametros.get("orden");
+    // Un valor desconocido en la URL cae al criterio por defecto.
+    const criterio = Object.hasOwn(COMPARADORES, pedido) ? pedido : "fecha";
+
+    // Escribe un filtro en la URL; un valor vacio lo quita para dejarla limpia.
+    // replace: escribir en el buscador no llena el historial de "Atras".
+    function cambiarFiltro(clave, valor) {
+        setParametros(
+            (anteriores) => {
+                const nuevos = new URLSearchParams(anteriores);
+                if (valor === "") nuevos.delete(clave);
+                else nuevos.set(clave, valor);
+                return nuevos;
+            },
+            { replace: true }
+        );
+    }
 
     // DERIVADO: se calcula en cada render. No se guarda en otro useState.
     // [...ordenes] copia el arreglo antes de ordenar: sort modifica el original.
@@ -53,28 +73,28 @@ function ListadoOrdenes() {
                 <ResumenOrdenes ordenes={ordenesVisibles} />
             </Panel>
 
-            <Panel titulo={`Ordenes registradas (${ordenesVisibles.length} de ${ordenes.length})`}>
+            <Panel titulo={`Órdenes registradas (${ordenesVisibles.length} de ${ordenes.length})`}>
                 <BarraFiltros
                     busqueda={busqueda}
                     departamento={departamento}
                     criterio={criterio}
-                    onBusquedaChange={setBusqueda}
-                    onDepartamentoChange={setDepartamento}
-                    onCriterioChange={setCriterio}
+                    onBusquedaChange={(valor) => cambiarFiltro("q", valor)}
+                    onDepartamentoChange={(valor) => cambiarFiltro("departamento", valor)}
+                    onCriterioChange={(valor) => cambiarFiltro("orden", valor)}
                 />
 
                 {/* Completar es optimista (ver useCompletarOrden): si el servidor
                     falla, la orden vuelve a su estado y aqui se avisa. */}
-                {aviso && <p className="mensaje mensaje--error aviso">{aviso}</p>}
+                {aviso && <p className="mensaje mensaje--error aviso" role="alert">{aviso}</p>}
 
                 {/* Los cuatro estados, en este orden: cargando, error, vacio, con datos.
             El vacio lo resuelve ListaOrdenes con su salida temprana. */}
                 {isPending ? (
-                    <p className="mensaje mensaje--cargando">Cargando ordenes...</p>
+                    <p className="mensaje mensaje--cargando">Cargando órdenes...</p>
                 ) : !data ? (
-                    <div className="mensaje mensaje--error">
+                    <div className="mensaje mensaje--error" role="alert">
                         <p>No se pudo cargar: {error.message}</p>
-                        <p>Revise que la terminal de npm run api siga corriendo.</p>
+                        <p>Revisa que la terminal de npm run api siga corriendo.</p>
                         <button className="boton" type="button" onClick={() => refetch()}>
                             Reintentar
                         </button>
