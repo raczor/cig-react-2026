@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Proyecto base del curso React para Frontend Profesional - Colegio de Ingenieros de Guatemala",
+  "description": "Serviclima service orders panel (React, Vite, TanStack Query, json-server)",
   "scripts": {
     "dev": "vite",
     "api": "json-server --watch db.json --port 3001",

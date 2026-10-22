@@ -16,12 +16,11 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      // JSX cuenta como uso de la variable: sin el plugin de React, los
-      // componentes importados se marcarian como sin usar.
+      // Capitalized names are components used only through JSX, which core ESLint can't see.
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
-  // Archivos de Node: configuracion de Vite y de ESLint, y la funcion de api/.
+  // Node files.
   { files: ["vite.config.js", "eslint.config.js", "api/**"], languageOptions: { globals: globals.node } },
 ];

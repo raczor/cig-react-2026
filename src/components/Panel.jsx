@@ -1,11 +1,9 @@
 import "./Panel.css";
 
-// Panel no sabe que lleva adentro: lo recibe en la prop children.
-// Esa es toda la idea de composicion.
-function Panel({ titulo, children }) {
+function Panel({ title, children }) {
     return (
         <section className="panel">
-            <h2 className="panel__titulo">{titulo}</h2>
+            <h2 className="panel__title">{title}</h2>
             {children}
         </section>
     );

@@ -1,23 +1,19 @@
-/* Estilos propios del componente raiz. La pantalla de bienvenida
-   de la sesion 1 se reemplaza por completo. */
-
-.cabecera {
-  margin-bottom: var(--espacio-4);
+.page-header {
+  margin-bottom: var(--space-4);
 }
 
-.cabecera__etiqueta {
-  margin-bottom: var(--espacio-1);
+.page-header__label {
+  margin-bottom: var(--space-1);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-texto-suave);
+  color: var(--color-text-muted);
 }
 
-/* Mensaje de error con su boton de Reintentar (sesion 4). */
-.mensaje--error p {
-  margin: 0 0 var(--espacio-1) 0;
+.message--error p {
+  margin: 0 0 var(--space-1) 0;
 }
 
-.mensaje--error .boton {
-  margin-top: var(--espacio-1);
+.message--error .button {
+  margin-top: var(--space-1);
 }
