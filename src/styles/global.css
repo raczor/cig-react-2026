@@ -1,7 +1,3 @@
-/* Estilos de base de la aplicacion.
-   Aqui va solo lo que aplica a toda la pagina o a elementos sueltos.
-   Cada componente tiene su propio archivo CSS al lado del archivo .jsx. */
-
 *,
 *::before,
 *::after {
@@ -10,9 +6,9 @@
 
 body {
   margin: 0;
-  background-color: var(--color-fondo);
-  color: var(--color-texto);
-  font-family: var(--fuente);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -20,7 +16,7 @@ body {
 h1,
 h2,
 h3 {
-  margin: 0 0 var(--espacio-2) 0;
+  margin: 0 0 var(--space-2) 0;
   line-height: 1.25;
   font-weight: 600;
 }
@@ -36,140 +32,128 @@ h3 {
 }
 
 p {
-  margin: 0 0 var(--espacio-2) 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 a {
-  color: var(--color-acento-oscuro);
+  color: var(--color-accent-dark);
 }
 
-/* ---------- Contenedor general de pagina ---------- */
-
-.contenedor {
-  max-width: var(--ancho-maximo);
+.container {
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--espacio-4) var(--espacio-3);
+  padding: var(--space-4) var(--space-3);
 }
 
-/* ---------- Botones ---------- */
-
-.boton {
+.button {
   display: inline-block;
-  padding: var(--espacio-1) var(--espacio-3);
-  border: 1px solid var(--color-acento);
-  border-radius: var(--radio-pequeno);
-  background-color: var(--color-acento);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-small);
+  background-color: var(--color-accent);
   color: #ffffff;
   font-family: inherit;
   font-size: 0.95rem;
   cursor: pointer;
 }
 
-.boton:hover {
-  background-color: var(--color-acento-oscuro);
-  border-color: var(--color-acento-oscuro);
+.button:hover {
+  background-color: var(--color-accent-dark);
+  border-color: var(--color-accent-dark);
 }
 
-.boton:disabled {
+.button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.boton--secundario {
+.button--secondary {
   background-color: transparent;
-  color: var(--color-acento-oscuro);
+  color: var(--color-accent-dark);
 }
 
-.boton--secundario:hover {
+.button--secondary:hover {
   background-color: rgba(122, 165, 199, 0.12);
-  color: var(--color-acento-oscuro);
+  color: var(--color-accent-dark);
 }
 
-.boton--peligro {
-  background-color: var(--color-cancelada);
-  border-color: var(--color-cancelada);
+.button--danger {
+  background-color: var(--color-cancelled);
+  border-color: var(--color-cancelled);
 }
 
-/* ---------- Campos de formulario ---------- */
-
-.campo {
+.field {
   display: block;
-  margin-bottom: var(--espacio-2);
+  margin-bottom: var(--space-2);
 }
 
-.campo__etiqueta {
+.field__label {
   display: block;
   margin-bottom: 0.25rem;
   font-size: 0.85rem;
-  color: var(--color-texto-suave);
+  color: var(--color-text-muted);
 }
 
-.campo__control {
+.field__control {
   width: 100%;
-  padding: var(--espacio-1);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-pequeno);
-  background-color: var(--color-superficie);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background-color: var(--color-surface);
   font-family: inherit;
   font-size: 0.95rem;
 }
 
-.campo__control:focus {
-  outline: 2px solid var(--color-acento);
+.field__control:focus {
+  outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
-.campo__error {
+.field__error {
   margin-top: 0.25rem;
   font-size: 0.8rem;
-  color: var(--color-error-texto);
+  color: var(--color-error-text);
 }
 
-/* ---------- Etiquetas de estado ---------- */
-
-.etiqueta {
+.badge {
   display: inline-block;
-  padding: 0.15rem var(--espacio-1);
+  padding: 0.15rem var(--space-1);
   border-radius: 999px;
   font-size: 0.75rem;
-  text-transform: capitalize;
   color: #2b2b2b;
 }
 
-.etiqueta--pendiente {
-  background-color: var(--color-pendiente);
+.badge--pending {
+  background-color: var(--color-pending);
 }
-.etiqueta--proceso {
-  background-color: var(--color-proceso);
+.badge--in-progress {
+  background-color: var(--color-in-progress);
 }
-.etiqueta--completada {
-  background-color: var(--color-completada);
+.badge--completed {
+  background-color: var(--color-completed);
 }
-.etiqueta--cancelada {
-  background-color: var(--color-cancelada);
+.badge--cancelled {
+  background-color: var(--color-cancelled);
 }
 
-/* ---------- Mensajes de estado de la interfaz ---------- */
-/* Se usan en la sesion 4 para los cuatro estados de una vista conectada a red. */
-
-.mensaje {
-  padding: var(--espacio-2);
-  border-radius: var(--radio);
+.message {
+  padding: var(--space-2);
+  border-radius: var(--radius);
   text-align: center;
 }
 
-.mensaje--cargando {
-  background-color: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  color: var(--color-texto-suave);
+.message--loading {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
-.mensaje--error {
-  background-color: var(--color-error-fondo);
-  color: var(--color-error-texto);
+.message--error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
 }
 
-.mensaje--vacio {
-  background-color: var(--color-aviso-fondo);
-  color: var(--color-aviso-texto);
+.message--empty {
+  background-color: var(--color-notice-bg);
+  color: var(--color-notice-text);
 }

@@ -1,43 +1,37 @@
-/* Variables de diseno del curso.
-   Se definen una sola vez y se usan en todos los componentes.
-   Cambiar un valor aqui cambia la aplicacion completa. */
-
 :root {
-  /* Paleta base */
-  --color-fondo: #faf7f2;
-  --color-superficie: #ffffff;
-  --color-texto: #2b2b2b;
-  --color-texto-suave: #6b6b6b;
-  --color-acento: #7aa5c7;
-  --color-acento-oscuro: #5d87a8;
-  --color-borde: #e2ddd5;
+  
+  --color-background: #faf7f2;
+  --color-surface: #ffffff;
+  --color-text: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-accent: #7aa5c7;
+  --color-accent-dark: #5d87a8;
+  --color-border: #e2ddd5;
 
-  /* Colores de estado de las ordenes.
-     Se usan en el renderizado condicional de la sesion 2. */
-  --color-pendiente: #e8c07d;
-  --color-proceso: #8fb8d9;
-  --color-completada: #9bc49b;
-  --color-cancelada: #d49b9b;
+  
+  --color-pending: #e8c07d;
+  --color-in-progress: #8fb8d9;
+  --color-completed: #9bc49b;
+  --color-cancelled: #d49b9b;
 
-  /* Colores de mensajes de interfaz.
-     Se usan en los estados de carga y error de la sesion 4. */
-  --color-error-fondo: #fbeeee;
-  --color-error-texto: #a05050;
-  --color-aviso-fondo: #fdf6e8;
-  --color-aviso-texto: #8a6d3b;
+  
+  --color-error-bg: #fbeeee;
+  --color-error-text: #a05050;
+  --color-notice-bg: #fdf6e8;
+  --color-notice-text: #8a6d3b;
 
-  /* Espaciado */
-  --espacio-1: 0.5rem;
-  --espacio-2: 1rem;
-  --espacio-3: 1.5rem;
-  --espacio-4: 2rem;
-  --espacio-5: 3rem;
+  
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
 
-  /* Formas y tipografia */
-  --radio: 10px;
-  --radio-pequeno: 6px;
-  --sombra: 0 1px 3px rgba(43, 43, 43, 0.08);
-  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fuente-mono: "Consolas", "Monaco", monospace;
-  --ancho-maximo: 1100px;
+  
+  --radius: 10px;
+  --radius-small: 6px;
+  --shadow: 0 1px 3px rgba(43, 43, 43, 0.08);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Consolas", "Monaco", monospace;
+  --max-width: 1100px;
 }

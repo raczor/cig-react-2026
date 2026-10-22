@@ -1,28 +1,23 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
-import ListadoOrdenes from "./pages/ListadoOrdenes.jsx";
-import NuevaOrden from "./pages/NuevaOrden.jsx";
-import DetalleOrden from "./pages/DetalleOrden.jsx";
-import EditarOrden from "./pages/EditarOrden.jsx";
-import NoEncontrada from "./pages/NoEncontrada.jsx";
+import OrdersPage from "./pages/OrdersPage.jsx";
+import NewOrderPage from "./pages/NewOrderPage.jsx";
+import OrderDetailPage from "./pages/OrderDetailPage.jsx";
+import EditOrderPage from "./pages/EditOrderPage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 import "./App.css";
 
-// App ya no guarda estado ni pide datos: solo decide que vista se dibuja.
-// Lo que antes estaba aqui ahora vive en pages/ListadoOrdenes.jsx.
 function App() {
   return (
     <Routes>
-      {/* Ruta de diseno: Layout se dibuja siempre y sus hijas entran en su Outlet */}
       <Route element={<Layout />}>
-        {/* index: la ruta "/" */}
-        <Route index element={<ListadoOrdenes />} />
-        {/* Fija: gana a ordenes/:id aunque las dos coincidan con /ordenes/nueva */}
-        <Route path="ordenes/nueva" element={<NuevaOrden />} />
-        <Route path="ordenes/:id" element={<DetalleOrden />} />
-        <Route path="ordenes/:id/editar" element={<EditarOrden />} />
-        {/* Comodin: cualquier URL que ninguna otra ruta reconozca */}
-        <Route path="*" element={<NoEncontrada />} />
+        <Route index element={<OrdersPage />} />
+        {/* Static path: wins over orders/:id for /orders/new. */}
+        <Route path="orders/new" element={<NewOrderPage />} />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
+        <Route path="orders/:id/edit" element={<EditOrderPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

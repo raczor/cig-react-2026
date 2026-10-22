@@ -1,28 +1,24 @@
 import { NavLink, Outlet } from "react-router-dom";
 import "./Layout.css";
 
-// Lo comun a todas las vistas se escribe una sola vez.
-// Outlet marca el lugar donde React Router dibuja la ruta hija.
 function Layout() {
     return (
-        <div className="contenedor">
-            <header className="cabecera">
-                <p className="cabecera__etiqueta">Serviclima, S.A.</p>
+        <div className="container">
+            <header className="page-header">
+                <p className="page-header__label">Serviclima, S.A.</p>
                 <h1>Panel de órdenes de servicio</h1>
 
-                {/* NavLink agrega la clase "active" al enlace de la ruta actual.
-            end: "/" solo queda activo en "/" y no en todas las rutas. */}
-                <nav className="navegacion">
-                    <NavLink to="/" end className="navegacion__enlace">
+                <nav className="nav">
+                    {/* `end` keeps "/" from matching every route. */}
+                    <NavLink to="/" end className="nav__link">
                         Órdenes
                     </NavLink>
-                    <NavLink to="/ordenes/nueva" className="navegacion__enlace">
+                    <NavLink to="/orders/new" className="nav__link">
                         Nueva orden
                     </NavLink>
                 </nav>
             </header>
 
-            {/* Aqui entra ListadoOrdenes, DetalleOrden, NuevaOrden... */}
             <Outlet />
         </div>
     );
