@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { orderInputSchema, orderReplaceSchema, statusChangeSchema } from "../shared/order-schema.js";
+import { createAuth } from "./auth.js";
 import { createDb } from "./db.js";
 import { orders } from "./schema.js";
 
@@ -27,8 +28,10 @@ function zodValidator({ schema }) {
     };
 }
 
-export async function buildApp({ db, logger = false } = {}) {
+export async function buildApp({ db, auth, logger = false } = {}) {
     const database = db ?? (await createDb());
+    // `auth` is a function that authenticates a request header, or null when login is off.
+    const authenticate = auth === undefined ? createAuth() : auth;
     const app = Fastify({ logger });
 
     app.setValidatorCompiler(zodValidator);
@@ -55,47 +58,56 @@ export async function buildApp({ db, logger = false } = {}) {
         async (api) => {
             api.get("/health", async () => ({ status: "ok" }));
 
-            api.get("/orders", async () => {
-                const rows = await database.select().from(orders).orderBy(orders.id);
-                return rows.map(toApi);
-            });
+            // Everything in this plugin needs a signed-in user (when login is on).
+            api.register(async (protectedApi) => {
+                if (authenticate) {
+                    protectedApi.addHook("onRequest", async (request) => {
+                        request.user = await authenticate(request.headers.authorization);
+                    });
+                }
 
-            api.get("/orders/:id", { schema: { params: idParams } }, async (request, reply) => {
-                const [row] = await database.select().from(orders).where(eq(orders.id, request.params.id));
-                return row ? toApi(row) : notFound(reply);
-            });
+                protectedApi.get("/orders", async () => {
+                    const rows = await database.select().from(orders).orderBy(orders.id);
+                    return rows.map(toApi);
+                });
 
-            // The server owns id, code and status: whatever the client sends for them is ignored.
-            // The id is taken from the sequence first so the code goes in with a single INSERT.
-            api.post("/orders", { schema: { body: orderInputSchema } }, async (request, reply) => {
-                const { rows } = await database.execute(sql`SELECT nextval(pg_get_serial_sequence('orders', 'id')) AS id`);
-                const id = Number(rows[0].id);
-                const code = `OS-${new Date().getFullYear()}-${String(id).padStart(3, "0")}`;
-                const [row] = await database
-                    .insert(orders)
-                    .values({ ...request.body, id, code, status: "pending" })
-                    .returning();
-                return reply.code(201).send(toApi(row));
-            });
+                protectedApi.get("/orders/:id", { schema: { params: idParams } }, async (request, reply) => {
+                    const [row] = await database.select().from(orders).where(eq(orders.id, request.params.id));
+                    return row ? toApi(row) : notFound(reply);
+                });
 
-            // PUT replaces every editable field; id and code never change.
-            api.put("/orders/:id", { schema: { params: idParams, body: orderReplaceSchema } }, async (request, reply) => {
-                const [row] = await database.update(orders).set(request.body).where(eq(orders.id, request.params.id)).returning();
-                return row ? toApi(row) : notFound(reply);
-            });
+                // The server owns id, code and status: whatever the client sends for them is ignored.
+                // The id is taken from the sequence first so the code goes in with a single INSERT.
+                protectedApi.post("/orders", { schema: { body: orderInputSchema } }, async (request, reply) => {
+                    const { rows } = await database.execute(sql`SELECT nextval(pg_get_serial_sequence('orders', 'id')) AS id`);
+                    const id = Number(rows[0].id);
+                    const code = `OS-${new Date().getFullYear()}-${String(id).padStart(3, "0")}`;
+                    const [row] = await database
+                        .insert(orders)
+                        .values({ ...request.body, id, code, status: "pending" })
+                        .returning();
+                    return reply.code(201).send(toApi(row));
+                });
 
-            api.patch("/orders/:id", { schema: { params: idParams, body: statusChangeSchema } }, async (request, reply) => {
-                const [row] = await database
-                    .update(orders)
-                    .set({ status: request.body.status })
-                    .where(eq(orders.id, request.params.id))
-                    .returning();
-                return row ? toApi(row) : notFound(reply);
-            });
+                // PUT replaces every editable field; id and code never change.
+                protectedApi.put("/orders/:id", { schema: { params: idParams, body: orderReplaceSchema } }, async (request, reply) => {
+                    const [row] = await database.update(orders).set(request.body).where(eq(orders.id, request.params.id)).returning();
+                    return row ? toApi(row) : notFound(reply);
+                });
 
-            api.delete("/orders/:id", { schema: { params: idParams } }, async (request, reply) => {
-                const rows = await database.delete(orders).where(eq(orders.id, request.params.id)).returning({ id: orders.id });
-                return rows.length > 0 ? reply.code(204).send() : notFound(reply);
+                protectedApi.patch("/orders/:id", { schema: { params: idParams, body: statusChangeSchema } }, async (request, reply) => {
+                    const [row] = await database
+                        .update(orders)
+                        .set({ status: request.body.status })
+                        .where(eq(orders.id, request.params.id))
+                        .returning();
+                    return row ? toApi(row) : notFound(reply);
+                });
+
+                protectedApi.delete("/orders/:id", { schema: { params: idParams } }, async (request, reply) => {
+                    const rows = await database.delete(orders).where(eq(orders.id, request.params.id)).returning({ id: orders.id });
+                    return rows.length > 0 ? reply.code(204).send() : notFound(reply);
+                });
             });
         },
         { prefix: "/api" }

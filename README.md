@@ -66,6 +66,21 @@ Status is one of `pending`, `in_progress`, `completed`, `cancelled`. Category is
 
 Bodies are validated with the Zod schemas in `shared/order-schema.js`; errors come back as `400 { message, issues }` with the Spanish messages the UI shows. A missing order is `404 { message }`.
 
+## Authentication
+
+Login uses Neon Auth (managed Better Auth). The browser signs in with `@neondatabase/neon-js`, gets a short-lived JWT, and sends it as `Authorization: Bearer <jwt>`. The API verifies it with `jose` against Neon's public keys. Everything under `/api/orders` needs a valid token; `/api/health` stays public.
+
+| Variable | Where | Meaning |
+|---|---|---|
+| `VITE_NEON_AUTH_URL` | front end (build time) | Neon Auth URL. Without it the app has no login page. |
+| `NEON_AUTH_BASE_URL` | API | Same URL; the token issuer is its origin. Required on Vercel: the API refuses to start without it instead of running open. |
+| `NEON_AUTH_JWKS_URL` | API, optional | Overrides where the public keys are fetched from. |
+| `AUTH_ALLOWED_EMAILS` | API, optional | Comma-separated emails. When set, only those users get in (403 for everyone else). |
+
+Locally none of these are set, so there is no login and the API is open: `npm run dev` and `npm run api` work without a Neon account.
+
+Neon Auth lets anyone create an account. If only some people should use the app, set `AUTH_ALLOWED_EMAILS`, or turn sign-up off in the Neon Auth settings. The allowlist compares the email in the token, so it is only as strong as the email check at sign-up: require email verification in Neon Auth before relying on it.
+
 ## Database
 
 The API uses Drizzle on Postgres.

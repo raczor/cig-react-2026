@@ -1,0 +1,175 @@
+// @vitest-environment node
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from "jose";
+import { buildApp } from "./app.js";
+import { createAuth } from "./auth.js";
+import { createDb, resetData } from "./db.js";
+
+const BASE_URL = "https://ep-test.neonauth.example.com/neondb/auth";
+const ISSUER = new URL(BASE_URL).origin;
+
+const valid = {
+    client: "Hotel Mirador", taxId: "1234567-8", department: "Guatemala", category: "repair",
+    technician: "Ana", date: "2026-10-14", hours: 4, amount: 150.5,
+};
+
+let privateKey, otherPrivateKey, keys, db, app;
+
+async function sign({ key = privateKey, issuer = ISSUER, email = "ana@example.com", sub = "user-1", expires = "15m" } = {}) {
+    const claims = email === undefined ? {} : { email };
+    return new SignJWT(claims)
+        .setProtectedHeader({ alg: "EdDSA", kid: "test-key" })
+        .setSubject(sub)
+        .setIssuer(issuer)
+        .setIssuedAt()
+        .setExpirationTime(expires)
+        .sign(key);
+}
+
+const bearer = (token) => ({ authorization: `Bearer ${token}` });
+
+async function appWith(authOptions) {
+    return buildApp({ db, auth: createAuth({ baseUrl: BASE_URL, keys, production: false, ...authOptions }) });
+}
+
+beforeAll(async () => {
+    const pair = await generateKeyPair("EdDSA", { extractable: true });
+    privateKey = pair.privateKey;
+    otherPrivateKey = (await generateKeyPair("EdDSA")).privateKey;
+    keys = createLocalJWKSet({ keys: [{ ...(await exportJWK(pair.publicKey)), kid: "test-key", alg: "EdDSA" }] });
+    db = await createDb({ databaseUrl: null });
+});
+
+beforeEach(async () => {
+    await resetData(db);
+    await app?.close();
+    app = await appWith();
+});
+
+afterAll(() => app.close());
+
+const call = (method, url, { headers, payload } = {}) => app.inject({ method, url, headers, payload });
+
+describe("with login on", () => {
+    it("keeps /api/health public", async () => {
+        expect((await call("GET", "/api/health")).statusCode).toBe(200);
+    });
+
+    it.each([
+        ["GET", "/api/orders"],
+        ["GET", "/api/orders/1"],
+        ["POST", "/api/orders"],
+        ["PUT", "/api/orders/1"],
+        ["PATCH", "/api/orders/1"],
+        ["DELETE", "/api/orders/1"],
+    ])("%s %s answers 401 without a token", async (method, url) => {
+        const response = await call(method, url, { payload: method === "POST" || method === "PUT" ? valid : method === "PATCH" ? { status: "completed" } : undefined });
+        expect(response.statusCode).toBe(401);
+        expect(response.json().message).toBe("Inicia sesión para continuar.");
+    });
+
+    it("does not change any data when the request is rejected", async () => {
+        await call("DELETE", "/api/orders/1");
+        await call("PATCH", "/api/orders/2", { payload: { status: "cancelled" } });
+        await call("POST", "/api/orders", { payload: valid });
+
+        const orders = (await call("GET", "/api/orders", { headers: bearer(await sign()) })).json();
+        expect(orders).toHaveLength(24);
+        expect(orders.find((o) => o.id === 2).status).toBe("in_progress");
+    });
+
+    it("lets a valid token read and write", async () => {
+        const headers = bearer(await sign());
+
+        expect((await call("GET", "/api/orders", { headers })).statusCode).toBe(200);
+        const created = await call("POST", "/api/orders", { headers, payload: valid });
+        expect(created.statusCode).toBe(201);
+        expect((await call("DELETE", `/api/orders/${created.json().id}`, { headers })).statusCode).toBe(204);
+    });
+
+    it("still validates the body for an authenticated user", async () => {
+        const response = await call("POST", "/api/orders", { headers: bearer(await sign()), payload: { ...valid, client: "" } });
+        expect(response.statusCode).toBe(400);
+    });
+
+    it("answers the browser preflight without a token (it never carries one)", async () => {
+        const response = await call("OPTIONS", "/api/orders/1", {
+            headers: {
+                origin: "http://localhost:5173",
+                "access-control-request-method": "DELETE",
+                "access-control-request-headers": "authorization,content-type",
+            },
+        });
+        expect(response.statusCode).toBe(204);
+        expect(response.headers["access-control-allow-headers"]).toContain("authorization");
+    });
+
+    describe("rejects tokens that are not valid", () => {
+        it.each([
+            ["expired", () => sign({ expires: "-1m" })],
+            ["from another issuer", () => sign({ issuer: "https://evil.example.com" })],
+            ["signed with a different key", () => sign({ key: otherPrivateKey })],
+            ["garbage", async () => "not.a.jwt"],
+        ])("%s", async (_name, makeToken) => {
+            const response = await call("GET", "/api/orders", { headers: bearer(await makeToken()) });
+            expect(response.statusCode).toBe(401);
+            expect(response.json().message).toBe("Tu sesión no es válida o expiró. Inicia sesión de nuevo.");
+        });
+
+        it.each([["only the scheme", "Bearer"], ["another scheme", "Basic dXNlcjpwYXNz"], ["a bare token", "abc"]])(
+            "an Authorization header with %s",
+            async (_name, authorization) => {
+                expect((await call("GET", "/api/orders", { headers: { authorization } })).statusCode).toBe(401);
+            }
+        );
+
+        it("an unsigned token (alg none)", async () => {
+            const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url");
+            const body = Buffer.from(JSON.stringify({ sub: "x", iss: ISSUER, exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url");
+            expect((await call("GET", "/api/orders", { headers: bearer(`${header}.${body}.`) })).statusCode).toBe(401);
+        });
+    });
+});
+
+describe("email allowlist", () => {
+    it("lets listed users in, ignoring case and spaces in the list", async () => {
+        await app.close();
+        app = await appWith({ allowedEmails: " Ana@Example.com , boss@example.com " });
+
+        const response = await call("GET", "/api/orders", { headers: bearer(await sign({ email: "ANA@example.com" })) });
+        expect(response.statusCode).toBe(200);
+    });
+
+    it("answers 403 to a valid user who is not listed, and to a token without an email", async () => {
+        await app.close();
+        app = await appWith({ allowedEmails: "boss@example.com" });
+
+        const stranger = await call("GET", "/api/orders", { headers: bearer(await sign({ email: "stranger@example.com" })) });
+        expect(stranger.statusCode).toBe(403);
+        expect(stranger.json().message).toBe("Tu cuenta no tiene acceso a esta aplicación.");
+
+        const noEmail = await call("GET", "/api/orders", { headers: bearer(await sign({ email: undefined })) });
+        expect(noEmail.statusCode).toBe(403);
+    });
+
+    it("is not applied when no list is configured", async () => {
+        const response = await call("GET", "/api/orders", { headers: bearer(await sign({ email: "anyone@example.com" })) });
+        expect(response.statusCode).toBe(200);
+    });
+});
+
+describe("createAuth configuration", () => {
+    it("is off without a base URL in development, so no Neon account is needed locally", () => {
+        expect(createAuth({ baseUrl: undefined, production: false })).toBeNull();
+    });
+
+    it("refuses to start without a base URL in production instead of serving an open API", () => {
+        expect(() => createAuth({ baseUrl: undefined, production: true })).toThrow(/NEON_AUTH_BASE_URL/);
+    });
+
+    it("an app built with auth null is open (development only)", async () => {
+        const open = await buildApp({ db, auth: null });
+        expect((await open.inject({ method: "GET", url: "/api/orders" })).statusCode).toBe(200);
+        await open.close();
+    });
+});
