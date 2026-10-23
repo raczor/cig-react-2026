@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient, authEnabled } from "./client.js";
 import { NETWORK_MESSAGE, authErrorMessage, isApiError } from "./errors.js";
-import { setUnauthorizedHandler } from "./token.js";
+import { clearTokenCache, setUnauthorizedHandler } from "./token.js";
 import { AuthContext } from "./auth-context.js";
 
 // Runs an auth call and turns every failure into an Error with a Spanish message.
@@ -40,6 +40,7 @@ function AuthProvider({ children }) {
         // the API does not accept, and sign-in would loop back here.
         setUnauthorizedHandler(() => {
             authClient.signOut().catch(() => {});
+            clearTokenCache();
             queryClient.clear();
             setState({ user: null, loading: false });
         });
@@ -53,6 +54,7 @@ function AuthProvider({ children }) {
             // Each of these throws an Error with a Spanish message when the request fails.
             async signIn(email, password) {
                 await attempt(() => authClient.signIn.email({ email, password }));
+                clearTokenCache();
                 queryClient.clear();
                 await refresh();
             },
@@ -61,12 +63,14 @@ function AuthProvider({ children }) {
             // project requires verifying the email first.
             async signUp(email, password) {
                 await attempt(() => authClient.signUp.email({ name: email.split("@")[0], email, password }));
+                clearTokenCache();
                 queryClient.clear();
                 return Boolean(await refresh());
             },
 
             async signOut() {
                 await authClient.signOut();
+                clearTokenCache();
                 queryClient.clear();
                 setState({ user: null, loading: false });
             },

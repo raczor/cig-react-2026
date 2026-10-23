@@ -16,7 +16,9 @@ vi.mock("./client.js", () => ({
         signIn: { email: vi.fn() },
         signUp: { email: vi.fn() },
         signOut: vi.fn(),
-        getJWTToken: vi.fn(),
+        // The real client has no getJWTToken (an unknown name becomes a request to a URL that does
+        // not exist, which is how that mistake reached production): only token() is provided.
+        token: vi.fn(),
     },
 }));
 vi.mock("../services/orders.js");
