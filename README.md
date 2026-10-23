@@ -75,6 +75,7 @@ Login uses Neon Auth (managed Better Auth). The browser signs in with `@neondata
 | `VITE_NEON_AUTH_URL` | front end (build time) | Neon Auth URL. Without it the app has no login page. |
 | `NEON_AUTH_BASE_URL` | API | Same URL; the token issuer is its origin. Required on Vercel: the API refuses to start without it instead of running open. |
 | `NEON_AUTH_JWKS_URL` | API, optional | Overrides where the public keys are fetched from. |
+| `NEON_AUTH_ISSUER` | API, optional | Overrides the expected token issuer (default: the origin of `NEON_AUTH_BASE_URL`). A rejected token is logged with its reason. |
 | `AUTH_ALLOWED_EMAILS` | API, optional | Comma-separated emails. When set, only those users get in (403 for everyone else). |
 
 Locally none of these are set, so there is no login and the API is open: `npm run dev` and `npm run api` work without a Neon account.

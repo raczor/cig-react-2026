@@ -131,6 +131,33 @@ describe("with login on", () => {
     });
 });
 
+describe("diagnosing rejected tokens", () => {
+    it("logs why a token was refused without telling the client", async () => {
+        const lines = [];
+        const stream = { write: (line) => lines.push(JSON.parse(line)) };
+        const logged = await buildApp({ db, auth: createAuth({ baseUrl: BASE_URL, keys, production: false }), logger: { level: "warn", stream } });
+
+        const response = await logged.inject({ method: "GET", url: "/api/orders", headers: bearer(await sign({ issuer: "https://other.example.com" })) });
+        await logged.close();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body).not.toContain("iss");
+        const entry = lines.find((l) => l.msg === "token rejected");
+        expect(entry.reason).toMatch(/ERR_JWT_CLAIM_VALIDATION_FAILED.*iss/);
+    });
+
+    it("accepts the issuer from NEON_AUTH_ISSUER when it differs from the base URL's origin", async () => {
+        await app.close();
+        app = await appWith({ issuerOverride: "https://auth.example.com" });
+
+        const ok = await call("GET", "/api/orders", { headers: bearer(await sign({ issuer: "https://auth.example.com" })) });
+        const wrong = await call("GET", "/api/orders", { headers: bearer(await sign()) });
+
+        expect(ok.statusCode).toBe(200);
+        expect(wrong.statusCode).toBe(401);
+    });
+});
+
 describe("email allowlist", () => {
     it("lets listed users in, ignoring case and spaces in the list", async () => {
         await app.close();

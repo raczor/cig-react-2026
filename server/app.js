@@ -48,6 +48,8 @@ export async function buildApp({ db, auth, logger = false } = {}) {
             request.log.error(error);
             return reply.code(500).send({ message: "Error interno del servidor." });
         }
+        // Why a token was refused (wrong issuer, expired, bad signature...) goes to the log, not the client.
+        if (error.detail) request.log.warn({ reason: error.detail }, "token rejected");
         return reply.code(status).send({ message: error.message, issues: error.issues });
     });
     app.setNotFoundHandler((request, reply) => reply.code(404).send({ message: "Ruta no encontrada." }));
