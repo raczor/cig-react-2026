@@ -7,7 +7,8 @@ let ready;
 export default async function handler(req, res) {
     // A failed start (for example the database was unreachable) must not be cached:
     // forget it so the next request tries again.
-    ready ??= buildApp()
+    // Warnings (such as a rejected token and why) go to Vercel's runtime logs.
+    ready ??= buildApp({ logger: { level: "warn" } })
         .then(async (app) => {
             await app.ready();
             return app;

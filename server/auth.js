@@ -34,7 +34,7 @@ export function createAuth({
     // Resolves to { id, email } for a valid token; throws an error with a statusCode otherwise.
     return async function authenticate(header) {
         const token = /^Bearer\s+(.+)$/i.exec(header ?? "")?.[1];
-        if (!token) throw httpError(401, "Inicia sesión para continuar.");
+        if (!token) throw httpError(401, "Inicia sesión para continuar.", "no bearer token in the Authorization header");
 
         let payload;
         try {
@@ -45,7 +45,7 @@ export function createAuth({
         }
 
         const email = typeof payload.email === "string" ? payload.email.toLowerCase() : undefined;
-        if (allowed && !(email && allowed.has(email))) throw httpError(403, "Tu cuenta no tiene acceso a esta aplicación.");
+        if (allowed && !(email && allowed.has(email))) throw httpError(403, "Tu cuenta no tiene acceso a esta aplicación.", `email not on the allowlist: ${email ?? "(none)"}`);
 
         return { id: String(payload.sub), email };
     };
