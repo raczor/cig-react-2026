@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    // json-server rewrites db.json on every save; reloading the app each time would break the UI.
-    watch: { ignored: ["**/db.json"] },
+    // The local API can keep its database in .data/; writes there must not reload the app.
+    watch: { ignored: ["**/.data/**"] },
   },
 });

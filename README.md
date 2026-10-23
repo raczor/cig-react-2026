@@ -1,6 +1,6 @@
 # Serviclima service orders
 
-Panel for registering, filtering, editing and moving service orders across a status board. React 19, Vite, Tailwind CSS 4, React Router and TanStack Query on the front end; json-server as the API. The UI is in Spanish.
+Panel for registering, filtering, editing and moving service orders across a status board. React 19, Vite, Tailwind CSS 4, React Router and TanStack Query on the front end; a Fastify API backed by Postgres (Drizzle ORM). The UI is in Spanish.
 
 ## Getting started
 
@@ -16,7 +16,7 @@ npm run dev   # terminal 2: app on http://localhost:5173
 | Command | What it does |
 |---|---|
 | `npm run dev` | Vite dev server (port 5173) |
-| `npm run api` | json-server on `db.json` (port 3001) |
+| `npm run api` | Fastify API on http://127.0.0.1:3001 (in-memory Postgres with seed data) |
 | `npm run build` | Production build into `dist` |
 | `npm run preview` | Serves the production build locally |
 | `npm run lint` | ESLint |
@@ -25,8 +25,9 @@ npm run dev   # terminal 2: app on http://localhost:5173
 ## Structure
 
 ```
-api/             Serverless json-server for Vercel
-db.json          Seed data
+api/             Vercel function that serves the Fastify app
+server/          Fastify app, Drizzle schema, database setup and seed data
+shared/          Catalog lists and Zod schemas used by both the API and the UI
 src/
   components/    App components (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
   components/ui/ Shared look: Button, Card, Alert, class helpers (buttonClass, controlClass)
@@ -50,18 +51,30 @@ src/
 
 ## API
 
-Order fields: `id`, `code`, `client`, `taxId`, `department`, `category`, `technician`, `date`, `hours`, `amount`, `status`.
+Served under `/api`. Order fields: `id`, `code`, `client`, `taxId`, `department`, `category`, `technician`, `date`, `hours`, `amount`, `status`.
 Status is one of `pending`, `in_progress`, `completed`, `cancelled`. Category is one of `installation`, `preventive_maintenance`, `repair`, `diagnosis`.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/orders` | List |
-| GET | `/orders/:id` | One order |
-| POST | `/orders` | Create |
-| PUT | `/orders/:id` | Replace |
-| PATCH | `/orders/:id` | Partial update |
-| DELETE | `/orders/:id` | Delete |
+| GET | `/api/orders` | List |
+| GET | `/api/orders/:id` | One order |
+| POST | `/api/orders` | Create. The server sets `id`, `code` (`OS-<year>-<id>`) and `status: pending`; those fields in the body are ignored |
+| PUT | `/api/orders/:id` | Replace the editable fields and `status` (`id` and `code` never change) |
+| PATCH | `/api/orders/:id` | Change `status` only |
+| DELETE | `/api/orders/:id` | Delete (204, no body) |
+| GET | `/api/health` | Health check |
+
+Bodies are validated with the Zod schemas in `shared/order-schema.js`; errors come back as `400 { message, issues }` with the Spanish messages the UI shows. A missing order is `404 { message }`.
+
+## Database
+
+The API uses Drizzle on Postgres.
+
+- **No `DATABASE_URL` (local development, tests):** PGlite, a Postgres that runs inside the Node process. It starts from `server/seed.json` and lives in memory, so data resets when the API restarts. Set `PGLITE_DIR=.data` to keep it on disk.
+- **`DATABASE_URL` set (production):** any Postgres through `pg`. The table is created on first start and filled with the demo orders when it is empty.
 
 ## Deploy (Vercel)
 
-Import the repository (Vite preset) and set `VITE_API_URL=/api`. `api/index.js` serves `db.json` from memory, so created or edited orders reset when the function restarts. `vercel.json` routes `/api/*` to the function and everything else to `index.html`.
+Import the repository (Vite preset) and set `VITE_API_URL=/api`. `api/index.js` runs the Fastify app as a Vercel function, and `vercel.json` routes `/api/*` to it and everything else to `index.html`.
+
+Add a Postgres database (for example Neon from the Vercel Marketplace) so orders persist: it sets `DATABASE_URL` for the project. Without it the API falls back to the in-memory database, which resets whenever the function restarts.

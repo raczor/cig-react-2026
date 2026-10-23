@@ -21,3 +21,6 @@ yarn-debug.log*
 .idea
 .DS_Store
 Thumbs.db
+
+# PGlite data when PGLITE_DIR=.data is used
+.data/

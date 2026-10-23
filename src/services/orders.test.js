@@ -32,26 +32,31 @@ describe("orders service", () => {
         expect(options.body).toBeUndefined();
     });
 
-    it("createOrder POSTs a pending order and then PATCHes the code built from the id", async () => {
+    it("createOrder is a single POST: the server assigns the code and the status", async () => {
         vi.stubEnv("VITE_API_URL", "http://api.test");
-        fetchMock
-            .mockReturnValueOnce(jsonResponse({ id: 25, client: "X", status: "pending" }))
-            .mockReturnValueOnce(jsonResponse({ id: 25, code: "OS-2026-025" }));
+        fetchMock.mockReturnValue(jsonResponse({ id: 25, code: "OS-2026-025", status: "pending" }));
         const { createOrder } = await import("./orders.js");
 
         const created = await createOrder({ client: "X" });
 
-        const [postUrl, post] = fetchMock.mock.calls[0];
-        expect(postUrl).toBe("http://api.test/orders");
-        expect(post.method).toBe("POST");
-        expect(post.headers["Content-Type"]).toBe("application/json");
-        expect(JSON.parse(post.body)).toEqual({ client: "X", status: "pending" });
-
-        const [patchUrl, patch] = fetchMock.mock.calls[1];
-        expect(patchUrl).toBe("http://api.test/orders/25");
-        expect(patch.method).toBe("PATCH");
-        expect(JSON.parse(patch.body)).toEqual({ code: "OS-2026-025" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        const [url, options] = fetchMock.mock.calls[0];
+        expect(url).toBe("http://api.test/orders");
+        expect(options.method).toBe("POST");
+        expect(options.headers["Content-Type"]).toBe("application/json");
+        expect(JSON.parse(options.body)).toEqual({ client: "X" });
         expect(created.code).toBe("OS-2026-025");
+    });
+
+    it("deleteOrder accepts 204 No Content without trying to parse a body", async () => {
+        vi.stubEnv("VITE_API_URL", "http://api.test");
+        const json = vi.fn(() => Promise.reject(new SyntaxError("Unexpected end of JSON input")));
+        fetchMock.mockReturnValue(Promise.resolve({ ok: true, status: 204, json }));
+        const { deleteOrder } = await import("./orders.js");
+
+        await expect(deleteOrder(7)).resolves.toBeNull();
+        expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/orders/7");
+        expect(json).not.toHaveBeenCalled();
     });
 
     it("changeStatus PATCHes only the status", async () => {

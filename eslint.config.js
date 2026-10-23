@@ -22,5 +22,5 @@ export default [
     },
   },
   // Node files.
-  { files: ["vite.config.js", "eslint.config.js", "api/**"], languageOptions: { globals: globals.node } },
+  { files: ["vite.config.js", "eslint.config.js", "api/**", "server/**"], languageOptions: { globals: globals.node } },
 ];
