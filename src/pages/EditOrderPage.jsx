@@ -11,8 +11,8 @@ function EditOrderPage() {
     const { data: order, isPending, error } = useOrder(id);
     const update = useUpdateOrder(id);
 
-    // PUT replaces the whole order: the form data carries the fields from `initial`
-    // (including id, code and status).
+    // The form only yields the editable fields. The status is not sent: changing it is the
+    // board's job, and the server keeps the stored one.
     async function save(data) {
         await update.mutateAsync(data);
         // Go back to the detail page instead of pushing a new entry, so its "Volver" button

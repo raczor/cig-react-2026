@@ -1,76 +1,67 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Field from "./Field.jsx";
-import { DEPARTMENTS, CATEGORY_LABELS } from "../data/catalogs.js";
-import { EMPTY, validate, toPayload } from "../lib/validation.js";
 import Button from "./ui/Button.jsx";
 import Alert from "./ui/Alert.jsx";
 import { controlClass, selectClass } from "./ui/styles.js";
+import { DEPARTMENTS, CATEGORY_LABELS } from "../data/catalogs.js";
+import { orderInputSchema } from "../../shared/order-schema.js";
 
-// Shared by create and edit. `onSubmit` must return a promise so the form can
-// disable the button while it runs and show the error if it rejects.
-// `initial` is only read on mount, so the edit page renders the form after the order has loaded.
+const EMPTY = {
+    client: "", taxId: "", department: "", category: "",
+    technician: "", date: "", hours: "", amount: "",
+};
+
+// Shared by create and edit. `onSubmit` receives the validated, converted values (the same
+// Zod schema the API uses) and must return a promise: the form stays disabled while it
+// runs and shows the error if it rejects.
 function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
-    const [values, setValues] = useState(initial);
-    const [errors, setErrors] = useState({});
-    const [submitting, setSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState(null);
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: zodResolver(orderInputSchema),
+        defaultValues: initial,
+    });
 
-    function handleChange(event) {
-        const { name, value } = event.target;
-        setValues((previous) => ({ ...previous, [name]: value }));
-    }
-
-    // id plus aria-invalid / aria-describedby wiring for each control.
-    function a11y(name) {
-        const hasError = Boolean(errors[name]);
+    // register() plus the id and aria attributes that tie each control to its error message.
+    // On a failed submit the first invalid field is focused (react-hook-form default).
+    // Number inputs yield "" when empty: valueAsNumber turns that into NaN, which the schema rejects.
+    function field(name, options) {
+        const error = errors[name];
         return {
+            ...register(name, options),
             id: `field-${name}`,
-            "aria-invalid": hasError || undefined,
-            "aria-describedby": hasError ? `field-${name}-error` : undefined,
+            "aria-invalid": error ? true : undefined,
+            "aria-describedby": error ? `field-${name}-error` : undefined,
         };
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault();
-
-        const found = validate(values);
-        setErrors(found);
-
-        // Focus the first invalid field so screen readers announce its error.
-        const first = Object.keys(found)[0];
-        if (first) {
-            document.getElementById(`field-${first}`)?.focus();
-            return;
-        }
-
-        setSubmitting(true);
-        setSubmitError(null);
+    async function submit(values) {
         try {
-            await onSubmit(toPayload(values));
+            await onSubmit(values);
             // Inside the try: if onSubmit fails, what the user typed is kept.
-            setValues(initial);
+            reset(initial);
         } catch (err) {
-            setSubmitError(err.message);
-        } finally {
-            setSubmitting(false);
+            setError("root.server", { message: err.message });
         }
     }
 
     return (
-        <form className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit} noValidate>
-            <Field label="Cliente" name="client" error={errors.client}>
-                <input className={controlClass} name="client" {...a11y("client")}
-                    value={values.client} onChange={handleChange} />
+        <form className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit(submit)} noValidate>
+            <Field label="Cliente" name="client" error={errors.client?.message}>
+                <input className={controlClass} {...field("client")} />
             </Field>
 
-            <Field label="NIT" name="taxId" error={errors.taxId}>
-                <input className={controlClass} name="taxId" {...a11y("taxId")} placeholder="1234567-8 o CF"
-                    value={values.taxId} onChange={handleChange} />
+            <Field label="NIT" name="taxId" error={errors.taxId?.message}>
+                <input className={controlClass} placeholder="1234567-8 o CF" {...field("taxId")} />
             </Field>
 
-            <Field label="Departamento" name="department" error={errors.department}>
-                <select className={selectClass} name="department" {...a11y("department")}
-                    value={values.department} onChange={handleChange}>
+            <Field label="Departamento" name="department" error={errors.department?.message}>
+                <select className={selectClass} {...field("department")}>
                     <option value="">Selecciona</option>
                     {DEPARTMENTS.map((name) => (
                         <option key={name} value={name}>{name}</option>
@@ -78,9 +69,8 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
                 </select>
             </Field>
 
-            <Field label="Categoría" name="category" error={errors.category}>
-                <select className={selectClass} name="category" {...a11y("category")}
-                    value={values.category} onChange={handleChange}>
+            <Field label="Categoría" name="category" error={errors.category?.message}>
+                <select className={selectClass} {...field("category")}>
                     <option value="">Selecciona</option>
                     {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                         <option key={value} value={value}>{label}</option>
@@ -88,35 +78,31 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
                 </select>
             </Field>
 
-            <Field label="Técnico" name="technician" error={errors.technician}>
-                <input className={controlClass} name="technician" {...a11y("technician")}
-                    value={values.technician} onChange={handleChange} />
+            <Field label="Técnico" name="technician" error={errors.technician?.message}>
+                <input className={controlClass} {...field("technician")} />
             </Field>
 
-            <Field label="Fecha" name="date" error={errors.date}>
-                <input className={controlClass} name="date" {...a11y("date")} type="date"
-                    value={values.date} onChange={handleChange} />
+            <Field label="Fecha" name="date" error={errors.date?.message}>
+                <input className={controlClass} type="date" {...field("date")} />
             </Field>
 
-            <Field label="Horas" name="hours" error={errors.hours}>
-                <input className={controlClass} name="hours" {...a11y("hours")} type="number"
-                    min="0" step="0.25" value={values.hours} onChange={handleChange} />
+            <Field label="Horas" name="hours" error={errors.hours?.message}>
+                <input className={controlClass} type="number" min="0" step="0.25" {...field("hours", { valueAsNumber: true })} />
             </Field>
 
-            <Field label="Monto (Q)" name="amount" error={errors.amount}>
-                <input className={controlClass} name="amount" {...a11y("amount")} type="number"
-                    min="0" step="0.01" value={values.amount} onChange={handleChange} />
+            <Field label="Monto (Q)" name="amount" error={errors.amount?.message}>
+                <input className={controlClass} type="number" min="0" step="0.01" {...field("amount", { valueAsNumber: true })} />
             </Field>
 
-            {submitError && (
+            {errors.root?.server && (
                 <Alert variant="error" className="mb-4 sm:col-span-2 lg:col-span-3">
-                    No se pudo guardar: {submitError}
+                    No se pudo guardar: {errors.root.server.message}
                 </Alert>
             )}
 
             <div className="pt-2 text-right sm:col-span-2 lg:col-span-3">
-                <Button type="submit" disabled={submitting}>
-                    {submitting ? "Guardando..." : submitLabel}
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Guardando..." : submitLabel}
                 </Button>
             </div>
         </form>
