@@ -72,6 +72,27 @@ describe("routing", () => {
         expect(body).not.toHaveProperty("code");
     });
 
+    it("Cancelar on the edit form goes back to the order without saving", async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<App />, { route: "/orders/5/edit" });
+
+        await user.click(await screen.findByRole("button", { name: "Cancelar" }));
+
+        expect(await screen.findByRole("heading", { name: "Orden OS-2026-005" })).toBeInTheDocument();
+        expect(api.updateOrder).not.toHaveBeenCalled();
+    });
+
+    it("Cancelar on the new order form goes back to the board without creating anything", async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<App />, { route: "/orders/new" });
+
+        await user.type(screen.getByLabelText("Cliente"), "Algo a medias");
+        await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+        expect(await screen.findByText("Orden OS-2026-005")).toBeInTheDocument();
+        expect(api.createOrder).not.toHaveBeenCalled();
+    });
+
     it("the header search goes to the board with ?q=", async () => {
         const user = userEvent.setup();
         renderWithProviders(<App />, { route: "/orders/5" });

@@ -103,4 +103,38 @@ describe("OrderForm", () => {
         expect(screen.getByLabelText("Departamento")).toHaveValue("Guatemala");
         expect(screen.getByLabelText("Horas")).toHaveValue(3.5);
     });
+
+    describe("Cancelar", () => {
+        it("is only there when the page provides onCancel", () => {
+            const { unmount } = renderWithProviders(<OrderForm onSubmit={vi.fn()} />);
+            expect(screen.queryByRole("button", { name: "Cancelar" })).not.toBeInTheDocument();
+            unmount();
+
+            renderWithProviders(<OrderForm onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument();
+        });
+
+        it("calls onCancel without validating or submitting", async () => {
+            const onSubmit = vi.fn();
+            const onCancel = vi.fn();
+            const user = userEvent.setup();
+            renderWithProviders(<OrderForm onSubmit={onSubmit} onCancel={onCancel} submitLabel="Registrar" />);
+
+            await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+            expect(onCancel).toHaveBeenCalledTimes(1);
+            expect(onSubmit).not.toHaveBeenCalled();
+            expect(screen.queryByText("Cliente obligatorio.")).not.toBeInTheDocument();
+        });
+
+        it("is disabled while saving, so a save is never abandoned half way", async () => {
+            const user = userEvent.setup();
+            renderWithProviders(<OrderForm onSubmit={() => new Promise(() => {})} onCancel={vi.fn()} submitLabel="Registrar" />);
+
+            await fillValid(user);
+            await user.click(screen.getByRole("button", { name: "Registrar" }));
+
+            expect(await screen.findByRole("button", { name: "Cancelar" })).toBeDisabled();
+        });
+    });
 });

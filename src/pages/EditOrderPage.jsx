@@ -11,14 +11,18 @@ function EditOrderPage() {
     const { data: order, isPending, error } = useOrder(id);
     const update = useUpdateOrder(id);
 
+    // Back to the detail page instead of pushing a new entry, so its "Volver" button
+    // does not land on this form again.
+    function backToDetail() {
+        if (hasHistory) navigate(-1);
+        else navigate(`/orders/${id}`, { replace: true });
+    }
+
     // The form only yields the editable fields. The status is not sent: changing it is the
     // board's job, and the server keeps the stored one.
     async function save(data) {
         await update.mutateAsync(data);
-        // Go back to the detail page instead of pushing a new entry, so its "Volver" button
-        // does not land on this form again.
-        if (hasHistory) navigate(-1);
-        else navigate(`/orders/${id}`, { replace: true });
+        backToDetail();
     }
 
     if (isPending) {
@@ -30,7 +34,7 @@ function EditOrderPage() {
 
     return (
         <Panel title={`Editar ${order.code}`}>
-            <OrderForm initial={order} onSubmit={save} submitLabel="Guardar cambios" />
+            <OrderForm initial={order} onSubmit={save} onCancel={backToDetail} submitLabel="Guardar cambios" />
         </Panel>
     );
 }
