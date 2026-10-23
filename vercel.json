@@ -1,5 +1,9 @@
 {
-  "functions": { "api/index.js": { "includeFiles": "db.json" } },
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{server/seed.json,node_modules/@electric-sql/pglite/dist/**}"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

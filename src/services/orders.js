@@ -2,7 +2,7 @@
 // Vite exposes only VITE_* variables, read at startup.
 // Without VITE_API_URL, only the local backend is assumed, and only in development.
 const API_URL =
-    import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:3001" : undefined);
+    import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:3001/api" : undefined);
 
 // Every call goes through here: one fetch, one `ok` check.
 // The Content-Type header only travels with a body: on a GET it would
@@ -25,7 +25,8 @@ async function request(path, { body, ...options } = {}) {
         throw new Error(`El servidor respondió ${response.status}`);
     }
 
-    return response.json();
+    // DELETE answers 204 No Content: there is no body to parse.
+    return response.status === 204 ? null : response.json();
 }
 
 const api = {
@@ -41,13 +42,8 @@ export const getOrders = ({ signal } = {}) => api.get("/orders", { signal });
 
 export const getOrder = (id, { signal } = {}) => api.get(`/orders/${id}`, { signal });
 
-// json-server assigns the id and the code is derived from it, so the code is
-// patched in after the POST. A real backend would generate it server-side.
-export async function createOrder(data) {
-    const created = await api.post("/orders", { ...data, status: "pending" });
-    const code = "OS-2026-" + String(created.id).padStart(3, "0");
-    return api.patch(`/orders/${created.id}`, { code });
-}
+// The server assigns the id, the code and the initial status.
+export const createOrder = (data) => api.post("/orders", data);
 
 // PUT replaces the whole order; PATCH merges.
 export const updateOrder = (id, order) => api.put(`/orders/${id}`, order);
