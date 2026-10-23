@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient, authEnabled } from "./client.js";
-import { NETWORK_MESSAGE, authErrorMessage } from "./errors.js";
+import { NETWORK_MESSAGE, authErrorMessage, isApiError } from "./errors.js";
 import { setUnauthorizedHandler } from "./token.js";
 import { AuthContext } from "./auth-context.js";
 
-// Runs an auth call and turns both failure styles into an Error with a Spanish message:
-// the SDK returns { error } for rejected credentials and throws when the service is unreachable.
+// Runs an auth call and turns every failure into an Error with a Spanish message.
+// The SDK returns { error } for some failures and throws for others: an API error
+// (AuthApiError, with an HTTP status) or, when the service cannot be reached, a network error.
 async function attempt(request) {
     let result;
     try {
         result = await request();
-    } catch {
-        throw new Error(NETWORK_MESSAGE);
+    } catch (error) {
+        console.error("Auth request failed:", error);
+        throw new Error(isApiError(error) ? authErrorMessage(error) : NETWORK_MESSAGE);
     }
     if (result?.error) throw new Error(authErrorMessage(result.error));
 }

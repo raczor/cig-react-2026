@@ -32,6 +32,8 @@ async function typeCredentials(user, email = "ana@example.com", password = "secr
 
 beforeEach(() => {
     vi.resetAllMocks();
+    // AuthProvider logs failed auth calls for diagnosis; keep the test output readable.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     api.getOrders.mockResolvedValue([makeOrder({ id: 5, code: "OS-2026-005" })]);
     api.getOrder.mockResolvedValue(makeOrder({ id: 5, code: "OS-2026-005" }));
     authClient.signOut.mockResolvedValue({});
@@ -120,6 +122,29 @@ describe("signing in", () => {
         const alert = await screen.findByRole("alert");
         expect(alert).toHaveTextContent("No se pudo completar la solicitud. Intenta de nuevo.");
         expect(alert).not.toHaveTextContent("exploded");
+    });
+
+    // The SDK throws AuthApiError for HTTP errors; its `code` is a generic placeholder.
+    const apiError = (message, status, code = "feature_not_supported") => Object.assign(new Error(message), { name: "AuthApiError", status, code });
+
+    it.each([
+        ["a site the service does not trust yet", apiError("Invalid origin", 403), "Este sitio todavía no está autorizado"],
+        ["a wrong password thrown as an API error", apiError("Invalid email or password", 401), "Correo o contraseña incorrectos."],
+        ["too many attempts", apiError("Too many requests", 429), "Demasiados intentos."],
+        ["an error nobody anticipated", apiError("Boom", 500), "No se pudo completar la solicitud."],
+    ])("shows the right Spanish message for %s, not a connection error", async (_name, thrown, expected) => {
+        const user = userEvent.setup();
+        authClient.getSession.mockResolvedValue(signedOut);
+        authClient.signIn.email.mockRejectedValue(thrown);
+        renderWithProviders(<App />);
+
+        await screen.findByRole("heading", { name: "Iniciar sesión" });
+        await typeCredentials(user);
+        await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+        const alert = await screen.findByRole("alert");
+        expect(alert).toHaveTextContent(expected);
+        expect(alert).not.toHaveTextContent("No se pudo conectar");
     });
 
     it("explains in Spanish that the service cannot be reached, instead of showing the browser's error", async () => {
