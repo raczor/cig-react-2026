@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { buttonClass } from "./ui/styles.js";
+import { useAuth } from "../auth/auth-context.js";
 
 const ICONS = {
     board: <path d="M3 4h4v16H3zM10 4h4v10h-4zM17 4h4v13h-4z" />,
@@ -26,6 +27,7 @@ function Layout() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const [params] = useSearchParams();
+    const { enabled, user, signOut } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const search = params.get("q") ?? "";
     const closeMenu = () => setMenuOpen(false);
@@ -60,12 +62,12 @@ function Layout() {
                         aria-hidden="true"
                         className="inline-flex size-12 flex-none items-center justify-center rounded-full bg-brand-100 font-bold text-brand-600"
                     >
-                        SC
+                        {user?.email ? user.email.slice(0, 2).toUpperCase() : "SC"}
                     </span>
-                    <p className="m-0 text-sm leading-snug opacity-90">
+                    <p className="m-0 min-w-0 text-sm leading-snug opacity-90">
                         Bienvenido,
                         <br />
-                        Serviclima, S.A.
+                        <span className="break-words">{user?.email ?? "Serviclima, S.A."}</span>
                     </p>
                 </div>
 
@@ -78,6 +80,16 @@ function Layout() {
                         <Icon name="plus" /> Nueva orden
                     </NavLink>
                 </nav>
+
+                {enabled && user && (
+                    <button
+                        type="button"
+                        onClick={signOut}
+                        className="mt-2 w-full px-6 py-3 text-left text-[0.95rem] text-white hover:bg-brand-600"
+                    >
+                        Cerrar sesión
+                    </button>
+                )}
             </aside>
 
             <div className="min-w-0">
