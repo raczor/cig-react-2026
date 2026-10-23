@@ -146,6 +146,17 @@ describe("diagnosing rejected tokens", () => {
         expect(entry.reason).toMatch(/ERR_JWT_CLAIM_VALIDATION_FAILED.*iss/);
     });
 
+    it("also logs a request that carried no token at all", async () => {
+        const lines = [];
+        const stream = { write: (line) => lines.push(JSON.parse(line)) };
+        const logged = await buildApp({ db, auth: createAuth({ baseUrl: BASE_URL, keys, production: false }), logger: { level: "warn", stream } });
+
+        await logged.inject({ method: "GET", url: "/api/orders" });
+        await logged.close();
+
+        expect(lines.find((l) => l.msg === "token rejected").reason).toMatch(/no bearer token/);
+    });
+
     it("accepts the issuer from NEON_AUTH_ISSUER when it differs from the base URL's origin", async () => {
         await app.close();
         app = await appWith({ issuerOverride: "https://auth.example.com" });
