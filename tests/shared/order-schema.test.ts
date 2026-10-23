@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { orderInputSchema, orderReplaceSchema, statusChangeSchema } from "./order-schema.js";
+import { orderInputSchema, orderReplaceSchema, statusChangeSchema } from "../../shared/order-schema.js";
 
 const valid = {
     client: "Hotel Mirador",
@@ -14,7 +14,7 @@ const valid = {
 };
 
 // The message of the first issue for a field, or undefined when the field is valid.
-function errorFor(overrides, field) {
+function errorFor(overrides: Record<string, unknown>, field: string): string | undefined {
     const result = orderInputSchema.safeParse({ ...valid, ...overrides });
     return result.success ? undefined : result.error.issues.find((i) => i.path[0] === field)?.message;
 }
@@ -29,6 +29,7 @@ describe("orderInputSchema", () => {
             client: "", taxId: "", department: "", category: "", technician: "", date: "", hours: NaN, amount: NaN,
         });
 
+        if (result.success) throw new Error("an empty form must not be valid");
         expect(Object.fromEntries(result.error.issues.map((i) => [i.path[0], i.message]))).toMatchObject({
             client: "Cliente obligatorio.",
             taxId: "NIT obligatorio. Usa CF si no tienes.",
@@ -105,6 +106,8 @@ describe("orderReplaceSchema and statusChangeSchema", () => {
 
     it("a status change accepts only known statuses", () => {
         expect(statusChangeSchema.safeParse({ status: "cancelled" }).success).toBe(true);
-        expect(statusChangeSchema.safeParse({ status: "flying" }).error.issues[0].message).toBe("Estado no válido.");
+        const result = statusChangeSchema.safeParse({ status: "flying" });
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0]?.message).toBe("Estado no válido.");
     });
 });

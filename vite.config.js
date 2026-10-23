@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
+    // Front end tests sit next to their components in src/; server and shared tests live in tests/.
+    include: ["src/**/*.test.{js,jsx}", "tests/**/*.test.ts"],
     environment: "jsdom",
     setupFiles: ["./src/test/setup.js"],
   },

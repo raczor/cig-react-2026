@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/index.js": {
-      "includeFiles": "{server/seed.json,node_modules/@electric-sql/pglite/dist/**}"
+    "api/index.ts": {
+      "includeFiles": "{server/data/seed.json,node_modules/@electric-sql/pglite/dist/**}"
     }
   },
   "rewrites": [

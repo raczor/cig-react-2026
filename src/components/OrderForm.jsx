@@ -5,7 +5,7 @@ import Button from "./ui/Button.jsx";
 import Alert from "./ui/Alert.jsx";
 import { controlClass, selectClass } from "./ui/styles.js";
 import { DEPARTMENTS, CATEGORY_LABELS } from "../data/catalogs.js";
-import { orderInputSchema } from "../../shared/order-schema.js";
+import { orderInputSchema } from "../../shared/order-schema.ts";
 
 const EMPTY = {
     client: "", taxId: "", department: "", category: "",

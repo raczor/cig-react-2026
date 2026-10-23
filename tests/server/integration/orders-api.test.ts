@@ -1,39 +1,28 @@
 // @vitest-environment node
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "./app.js";
-import { createDb, resetData } from "./db.js";
+import type { Order } from "../../../server/src/domain/order.js";
+import { validInput as valid } from "../../support/fixtures.js";
+import { createTestApp, type TestApp } from "../../support/testApp.js";
 
-const valid = {
-    client: "Hotel Mirador",
-    taxId: "1234567-8",
-    department: "Guatemala",
-    category: "repair",
-    technician: "Ana Pérez",
-    date: "2026-10-14",
-    hours: 4,
-    amount: 150.5,
-};
-
-let app;
-let db;
+let stack: TestApp;
 
 // One in-memory Postgres (PGlite) per file, reset to the seed data before every test.
 beforeAll(async () => {
-    db = await createDb({ databaseUrl: null });
-    app = await buildApp({ db });
+    stack = await createTestApp();
 });
 
-beforeEach(() => resetData(db));
+beforeEach(() => stack.reset());
 
-afterAll(() => app.close());
+afterAll(() => stack.close());
 
-const get = (url) => app.inject({ method: "GET", url });
-const send = (method, url, payload) => app.inject({ method, url, payload });
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+const get = (url: string) => stack.app.inject({ method: "GET", url });
+const send = (method: Method, url: string, payload?: Record<string, unknown>) => stack.app.inject({ method, url, payload });
 
 describe("GET /api/orders", () => {
     it("returns the seeded orders with the API field names and numeric types", async () => {
         const response = await get("/api/orders");
-        const orders = response.json();
+        const orders: Order[] = response.json();
 
         expect(response.statusCode).toBe(200);
         expect(orders).toHaveLength(24);
@@ -116,10 +105,10 @@ describe("POST /api/orders", () => {
 
         expect(response.statusCode).toBe(400);
         expect(response.json().message).toBe("Cliente obligatorio.");
-        expect(response.json().issues.map((i) => i.path)).toEqual(["client", "hours"]);
+        expect(response.json().issues.map((i: { path: string }) => i.path)).toEqual(["client", "hours"]);
     });
 
-    it.each([
+    it.each<[string, unknown]>([
         ["taxId", "abc"],
         ["department", "Narnia"],
         ["category", "magic"],
@@ -225,12 +214,12 @@ describe("platform", () => {
     });
 
     it("sends CORS headers so the dev front end on another port can call it", async () => {
-        const response = await app.inject({ method: "GET", url: "/api/orders", headers: { origin: "http://localhost:5173" } });
+        const response = await stack.app.inject({ method: "GET", url: "/api/orders", headers: { origin: "http://localhost:5173" } });
         expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
     });
 
     it.each(["PUT", "PATCH", "DELETE"])("answers the browser preflight for %s", async (method) => {
-        const response = await app.inject({
+        const response = await stack.app.inject({
             method: "OPTIONS",
             url: "/api/orders/1",
             headers: {
@@ -256,7 +245,7 @@ describe("failed requests", () => {
 });
 
 describe("accepts the last day of a leap year and rejects Feb 29 otherwise", () => {
-    it.each([["2028-02-29", 201], ["2026-02-29", 400]])("date %s -> %i", async (date, status) => {
+    it.each<[string, number]>([["2028-02-29", 201], ["2026-02-29", 400]])("date %s -> %i", async (date, status) => {
         expect((await send("POST", "/api/orders", { ...valid, date })).statusCode).toBe(status);
     });
 });
