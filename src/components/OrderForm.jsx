@@ -14,8 +14,8 @@ const EMPTY = {
 
 // Shared by create and edit. `onSubmit` receives the validated, converted values (the same
 // Zod schema the API uses) and must return a promise: the form stays disabled while it
-// runs and shows the error if it rejects.
-function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
+// runs and shows the error if it rejects. `onCancel`, when given, adds a Cancelar button.
+function OrderForm({ initial = EMPTY, onSubmit, onCancel, submitLabel = "Guardar" }) {
     const {
         register,
         handleSubmit,
@@ -100,7 +100,12 @@ function OrderForm({ initial = EMPTY, onSubmit, submitLabel = "Guardar" }) {
                 </Alert>
             )}
 
-            <div className="pt-2 text-right sm:col-span-2 lg:col-span-3">
+            <div className="flex justify-end gap-2 pt-2 sm:col-span-2 lg:col-span-3">
+                {onCancel && (
+                    <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+                        Cancelar
+                    </Button>
+                )}
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? "Guardando..." : submitLabel}
                 </Button>
