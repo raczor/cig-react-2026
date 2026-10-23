@@ -2,43 +2,36 @@ import { authClient } from "./client.js";
 
 // The API layer must not depend on React, so the session is reached through these functions.
 
-const REFRESH_MARGIN_MS = 60_000;
+// A JWT is three dot-separated parts; the opaque session id the service also uses has none.
+const looksLikeJwt = (token) => typeof token === "string" && token.split(".").length === 3;
 
-// The JWT is valid for about 15 minutes. Fetching it costs a round trip to the auth service,
-// so it is reused until shortly before it expires.
-let cached = null; // { token, expiresAt }
+// Bypasses the SDK's in-memory session cache (an internal header of @neondatabase/auth).
+const FORCE_FETCH = { fetchOptions: { headers: { "X-Force-Fetch": "true" } } };
 
-export function clearTokenCache() {
-    cached = null;
-}
-
-// The `exp` claim in milliseconds, or 0 when the token cannot be read (then it is not cached).
-function expiryOf(token) {
-    try {
-        const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-        return JSON.parse(atob(payload)).exp * 1000;
-    } catch {
-        return 0;
-    }
-}
-
-// The JWT the API expects as `Authorization: Bearer <jwt>`, or null when there is no session.
-// authClient.token() is the Better Auth JWT plugin (GET /token). Any other method name on this
-// client is not a missing function: it becomes a request to a URL that does not exist.
+// The JWT the API expects as `Authorization: Bearer <jwt>`, or null when there is none.
+//
+// With this SDK the JWT is session.token: it takes the `set-auth-jwt` header of the session
+// response and puts it there. getSession() is cached in memory until shortly before the JWT
+// expires, so calling it on every request is cheap. Other method names on this client are not
+// missing functions: any unknown name becomes a request to a URL that does not exist
+// (getJWTToken() and token() both ended up as 404 or empty answers that way).
 export async function getAccessToken() {
     if (!authClient) return null;
-    if (cached && cached.expiresAt - REFRESH_MARGIN_MS > Date.now()) return cached.token;
 
-    let result;
     try {
-        result = await authClient.token();
+        let { data } = await authClient.getSession();
+        // A session cached right after signing in can still hold the opaque id: ask the service again.
+        if (data?.session && !looksLikeJwt(data.session.token)) {
+            ({ data } = await authClient.getSession(FORCE_FETCH));
+        }
+
+        const token = data?.session?.token;
+        if (looksLikeJwt(token)) return token;
+        if (data?.session) console.warn("Neon Auth session has no JWT: the API will not accept this request.");
+        return null;
     } catch {
         throw new Error("No se pudo comprobar tu sesión. Revisa tu conexión e intenta de nuevo.");
     }
-
-    const token = result?.data?.token ?? null;
-    cached = token ? { token, expiresAt: expiryOf(token) } : null;
-    return token;
 }
 
 let unauthorizedHandler = () => {};

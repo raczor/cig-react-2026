@@ -1,86 +1,53 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./client.js", () => ({ authClient: { token: vi.fn() } }));
+// The fake client has no token() or getJWTToken(): calling a method the real client lacks fails the test.
+vi.mock("./client.js", () => ({ authClient: { getSession: vi.fn() } }));
 
-// A JWT is header.payload.signature; only the payload's exp matters here.
-function jwtExpiringIn(ms) {
-    const payload = btoa(JSON.stringify({ exp: Math.floor((Date.now() + ms) / 1000) })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    return `header.${payload}.signature`;
-}
+const JWT = "eyJhbGciOiJFZERTQSJ9.eyJzdWIiOiJ1MSJ9.signature";
+const OPAQUE = "k3j2h4g5f6d7s8a9";
+const sessionWith = (token) => ({ data: { user: { id: "u1" }, session: { token } } });
 
 describe("access token", () => {
-    let authClient, getAccessToken, clearTokenCache;
+    let authClient, getAccessToken;
 
     beforeEach(async () => {
-        vi.useFakeTimers({ toFake: ["Date"] });
         vi.resetModules();
         ({ authClient } = await import("./client.js"));
-        ({ getAccessToken, clearTokenCache } = await import("./token.js"));
-        authClient.token.mockReset();
+        ({ getAccessToken } = await import("./token.js"));
+        authClient.getSession.mockReset();
+        vi.spyOn(console, "warn").mockImplementation(() => {});
     });
 
-    afterEach(() => vi.useRealTimers());
+    it("is the session's JWT", async () => {
+        authClient.getSession.mockResolvedValue(sessionWith(JWT));
 
-    it("asks the JWT plugin for the token (authClient.token)", async () => {
-        const jwt = jwtExpiringIn(15 * 60_000);
-        authClient.token.mockResolvedValue({ data: { token: jwt } });
-
-        expect(await getAccessToken()).toBe(jwt);
-        expect(authClient.token).toHaveBeenCalledTimes(1);
+        expect(await getAccessToken()).toBe(JWT);
+        expect(authClient.getSession).toHaveBeenCalledTimes(1);
     });
 
-    it("reuses the token instead of calling the auth service for every request", async () => {
-        authClient.token.mockResolvedValue({ data: { token: jwtExpiringIn(15 * 60_000) } });
-
-        await getAccessToken();
-        await getAccessToken();
-        await getAccessToken();
-
-        expect(authClient.token).toHaveBeenCalledTimes(1);
-    });
-
-    it("fetches a new one shortly before the old one expires", async () => {
-        authClient.token
-            .mockResolvedValueOnce({ data: { token: jwtExpiringIn(90_000) } })
-            .mockResolvedValueOnce({ data: { token: jwtExpiringIn(15 * 60_000) } });
-
-        const first = await getAccessToken();
-        vi.setSystemTime(Date.now() + 45_000); // 45 s left: inside the 60 s refresh margin
-        const second = await getAccessToken();
-
-        expect(second).not.toBe(first);
-        expect(authClient.token).toHaveBeenCalledTimes(2);
-    });
-
-    it("returns null when there is no session, and does not cache that", async () => {
-        authClient.token.mockResolvedValue({ data: null, error: { status: 401 } });
+    it("is null when nobody is signed in", async () => {
+        authClient.getSession.mockResolvedValue({ data: null });
 
         expect(await getAccessToken()).toBeNull();
-        await getAccessToken();
-        expect(authClient.token).toHaveBeenCalledTimes(2);
     });
 
-    it("forgets the token when the user changes", async () => {
-        authClient.token.mockResolvedValue({ data: { token: jwtExpiringIn(15 * 60_000) } });
+    it("asks the service again when the cached session still holds the opaque id", async () => {
+        authClient.getSession.mockResolvedValueOnce(sessionWith(OPAQUE)).mockResolvedValueOnce(sessionWith(JWT));
 
-        await getAccessToken();
-        clearTokenCache();
-        await getAccessToken();
-
-        expect(authClient.token).toHaveBeenCalledTimes(2);
+        expect(await getAccessToken()).toBe(JWT);
+        expect(authClient.getSession).toHaveBeenCalledTimes(2);
+        expect(authClient.getSession.mock.calls[1][0].fetchOptions.headers["X-Force-Fetch"]).toBe("true");
     });
 
-    it("does not cache a token whose expiry cannot be read", async () => {
-        authClient.token.mockResolvedValue({ data: { token: "opaque-session-id" } });
+    it("never sends the opaque id as a bearer token, and says so in the console", async () => {
+        authClient.getSession.mockResolvedValue(sessionWith(OPAQUE));
 
-        await getAccessToken();
-        await getAccessToken();
-
-        expect(authClient.token).toHaveBeenCalledTimes(2);
+        expect(await getAccessToken()).toBeNull();
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no JWT"));
     });
 
     it("explains in Spanish when the auth service cannot be reached", async () => {
-        authClient.token.mockRejectedValue(new TypeError("Failed to fetch"));
+        authClient.getSession.mockRejectedValue(new TypeError("Failed to fetch"));
 
         await expect(getAccessToken()).rejects.toThrow("No se pudo comprobar tu sesión");
     });
