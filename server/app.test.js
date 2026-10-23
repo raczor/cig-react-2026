@@ -155,9 +155,19 @@ describe("PUT /api/orders/:id", () => {
         expect(response.json()).toMatchObject({ ...valid, id: 1, code: "OS-2026-001", status: "in_progress" });
     });
 
-    it("404s for an unknown order and 400s for an invalid body", async () => {
-        expect((await send("PUT", "/api/orders/9999", { ...valid, status: "pending" })).statusCode).toBe(404);
-        expect((await send("PUT", "/api/orders/1", { ...valid })).statusCode).toBe(400);
+    it("keeps the stored status when the body has none, so a stale edit cannot undo a status change", async () => {
+        await send("PATCH", "/api/orders/1", { status: "cancelled" });
+
+        const response = await send("PUT", "/api/orders/1", { ...valid });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.json()).toMatchObject({ ...valid, id: 1, status: "cancelled" });
+    });
+
+    it("404s for an unknown order and 400s for an invalid body or status", async () => {
+        expect((await send("PUT", "/api/orders/9999", { ...valid })).statusCode).toBe(404);
+        expect((await send("PUT", "/api/orders/1", { ...valid, client: "" })).statusCode).toBe(400);
+        expect((await send("PUT", "/api/orders/1", { ...valid, status: "flying" })).statusCode).toBe(400);
     });
 });
 

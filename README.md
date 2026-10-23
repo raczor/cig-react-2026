@@ -27,14 +27,14 @@ npm run dev   # terminal 2: app on http://localhost:5173
 ```
 api/             Vercel function that serves the Fastify app
 server/          Fastify app, Drizzle schema, database setup and seed data
-shared/          Catalog lists and Zod schemas used by both the API and the UI
+shared/          Catalog lists and Zod schemas used by both the API and the form (React Hook Form)
 src/
   components/    App components (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
   components/ui/ Shared look: Button, Card, Alert, class helpers (buttonClass, controlClass)
   pages/         One component per route
   hooks/         TanStack Query hooks (useOrders.js)
   services/      HTTP calls (the only place that uses fetch)
-  lib/           Pure logic: form validation, board filtering and sorting
+  lib/           Pure logic: board filtering and sorting
   data/          Departments, category and status labels
   test/          Test setup, fixtures and the render helper
   styles/        Tailwind entry and design tokens (index.css)
@@ -59,7 +59,7 @@ Status is one of `pending`, `in_progress`, `completed`, `cancelled`. Category is
 | GET | `/api/orders` | List |
 | GET | `/api/orders/:id` | One order |
 | POST | `/api/orders` | Create. The server sets `id`, `code` (`OS-<year>-<id>`) and `status: pending`; those fields in the body are ignored |
-| PUT | `/api/orders/:id` | Replace the editable fields and `status` (`id` and `code` never change) |
+| PUT | `/api/orders/:id` | Replace the editable fields; `status` is changed only if sent (`id` and `code` never change) |
 | PATCH | `/api/orders/:id` | Change `status` only |
 | DELETE | `/api/orders/:id` | Delete (204, no body) |
 | GET | `/api/health` | Health check |

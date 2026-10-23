@@ -52,6 +52,26 @@ describe("routing", () => {
         expect(await screen.findByLabelText("Cliente")).toHaveValue("Hotel Mirador");
     });
 
+    it("saving an edit sends only the editable fields: no status, id or code", async () => {
+        const user = userEvent.setup();
+        api.getOrder.mockResolvedValue(makeOrder({ id: 5, code: "OS-2026-005", client: "Hotel Mirador", status: "in_progress" }));
+        api.updateOrder.mockResolvedValue({});
+        renderWithProviders(<App />, { route: "/orders/5/edit" });
+
+        const client = await screen.findByLabelText("Cliente");
+        await user.clear(client);
+        await user.type(client, "Hotel Nuevo");
+        await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+        expect(api.updateOrder).toHaveBeenCalledTimes(1);
+        const [id, body] = api.updateOrder.mock.calls[0];
+        expect(id).toBe("5");
+        expect(body).toMatchObject({ client: "Hotel Nuevo", hours: 3.5, amount: 1750 });
+        expect(body).not.toHaveProperty("status");
+        expect(body).not.toHaveProperty("id");
+        expect(body).not.toHaveProperty("code");
+    });
+
     it("the header search goes to the board with ?q=", async () => {
         const user = userEvent.setup();
         renderWithProviders(<App />, { route: "/orders/5" });

@@ -31,8 +31,10 @@ export const orderInputSchema = z.object({
     amount: z.number({ error: "Monto mayor que cero." }).gt(0, "Monto mayor que cero.").max(9_999_999_999.99, "Monto demasiado grande."),
 });
 
+// A replace may carry a status; without one the stored status is left alone, so editing a
+// stale copy of an order cannot undo a status change made elsewhere (e.g. on the board).
 export const orderReplaceSchema = orderInputSchema.extend({
-    status: z.enum(STATUSES, { error: "Estado no válido." }),
+    status: z.enum(STATUSES, { error: "Estado no válido." }).optional(),
 });
 
 export const statusChangeSchema = z.object({
