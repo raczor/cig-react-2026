@@ -16,29 +16,80 @@ npm run dev   # terminal 2: app on http://localhost:5173
 | Command | What it does |
 |---|---|
 | `npm run dev` | Vite dev server (port 5173) |
-| `npm run api` | Fastify API on http://127.0.0.1:3001 (in-memory Postgres with seed data) |
+| `npm run api` | Fastify API (TypeScript, run with `tsx`) on http://127.0.0.1:3001, in-memory Postgres with seed data |
 | `npm run build` | Production build into `dist` |
 | `npm run preview` | Serves the production build locally |
-| `npm run lint` | ESLint |
+| `npm run lint` | ESLint (JavaScript and TypeScript) |
+| `npm run typecheck` | `tsc --noEmit` over the server, shared code, the Vercel function and their tests |
 | `npm test` | Vitest, run once (`npm run test:watch` to keep watching) |
 
 ## Structure
 
 ```
-api/             Vercel function that serves the Fastify app
-server/          Fastify app, Drizzle schema, database setup and seed data
-shared/          Catalog lists and Zod schemas used by both the API and the form (React Hook Form)
-src/
-  components/    App components (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
-  components/ui/ Shared look: Button, Card, Alert, class helpers (buttonClass, controlClass)
-  pages/         One component per route
-  hooks/         TanStack Query hooks (useOrders.js)
-  services/      HTTP calls (the only place that uses fetch)
-  lib/           Pure logic: board filtering and sorting
-  data/          Departments, category and status labels
-  test/          Test setup, fixtures and the render helper
-  styles/        Tailwind entry and design tokens (index.css)
+api/index.ts       Vercel function: an adapter that hands requests to the Fastify app
+server/
+  src/             The API, in TypeScript (see "Server architecture")
+  data/seed.json   Demo orders loaded into a new database
+shared/            Catalog lists and Zod schemas (TypeScript) used by the API and by the form
+tests/
+  server/unit/         One class at a time, with fakes (no database, no HTTP)
+  server/integration/  The real stack over an in-memory Postgres (PGlite)
+  shared/              The Zod schemas
+  support/             Fakes, fixtures, token signing and the test app
+src/               The front end (JavaScript); its tests sit next to the code
+  components/      App components (Layout, KanbanBoard, KanbanCard, OrderForm, ...)
+  components/ui/   Shared look: Button, Card, Alert, class helpers
+  pages/           One component per route
+  hooks/           TanStack Query hooks (useOrders.js)
+  services/        HTTP calls (the only place that uses fetch)
+  auth/            Neon Auth client, session provider, route guard
+  lib/             Pure logic: board filtering and sorting
+  data/            Department, category and status labels
+  test/            Test setup, fixtures and the render helper
+  styles/          Tailwind entry and design tokens (index.css)
 ```
+
+## Server architecture
+
+```
+server/src/
+  domain/           Order, the OrderRepository interface, the order code strategy
+  application/      OrderService (the use cases), the Authenticator interface
+  infrastructure/   Everything that touches the outside world
+    database/         Driver factory (Postgres / PGlite), schema, setup and seed
+    persistence/      DrizzleOrderRepository
+    auth/             JWT verification, allowlist decorator, "login off" object, factory
+  http/             Routes, error mapping, Zod validation, authentication hook
+  config.ts         The only reader of environment variables
+  app.ts            Builds the Fastify app from the collaborators it is given
+  createApplication.ts   The composition root: where concrete classes are chosen
+  main.ts           Local entry point (npm run api)
+```
+
+Dependencies point inward: `http` and `infrastructure` depend on `application` and `domain`, never the other way round. The service knows nothing about HTTP or SQL.
+
+**SOLID, where it applies**
+
+| Principle | In this code |
+|---|---|
+| Single responsibility | Routes only translate HTTP; `OrderService` holds the rules; the repository is the only code that writes SQL; `config.ts` is the only code that reads `process.env`. |
+| Open / closed | A new access rule is a new `Authenticator` decorator; a new code format is a new `OrderCodeGenerator`; a new database is a new driver class. None of them edits existing code. |
+| Liskov substitution | Every `Authenticator` (JWT, allowlist, anonymous) and every `OrderRepository` (Drizzle, in-memory fake) can replace another without callers noticing. |
+| Interface segregation | The ports are small: `Authenticator` and `OrderCodeGenerator` have one method each. |
+| Dependency inversion | `OrderService` receives an `OrderRepository` and a code generator in its constructor; `createApplication` is the only place that picks the implementations. |
+
+**GoF patterns, only where they earn their place**
+
+| Pattern | Where | Why |
+|---|---|---|
+| Repository | `OrderRepository` / `DrizzleOrderRepository` | The service is tested with an in-memory fake; storage can change. |
+| Strategy | `OrderCodeGenerator` (and the clock) | How a code looks is swappable and testable. |
+| Decorator | `AllowlistAuthenticator` wraps any `Authenticator` | Adds "only these emails" without touching JWT verification. |
+| Null Object | `AnonymousAuthenticator` | "Login is off" is just another authenticator, so the HTTP layer never checks for `null`. |
+| Factory | `createAuthenticator`, `createDatabase` | Assemble the right objects from configuration. |
+| Adapter | `api/index.ts`, `zodValidatorCompiler` | Fit Vercel's request and Fastify's validation hook to the code that already exists. |
+
+Not used on purpose: patterns that would only add indirection to a six-endpoint API (no event bus, no command objects, no abstract factories of factories).
 
 ## Routes
 
@@ -64,7 +115,7 @@ Status is one of `pending`, `in_progress`, `completed`, `cancelled`. Category is
 | DELETE | `/api/orders/:id` | Delete (204, no body) |
 | GET | `/api/health` | Health check |
 
-Bodies are validated with the Zod schemas in `shared/order-schema.js`; errors come back as `400 { message, issues }` with the Spanish messages the UI shows. A missing order is `404 { message }`.
+Bodies are validated with the Zod schemas in `shared/order-schema.ts`; errors come back as `400 { message, issues }` with the Spanish messages the UI shows. A missing order is `404 { message }`.
 
 ## Authentication
 
@@ -86,11 +137,11 @@ Neon Auth lets anyone create an account. If only some people should use the app,
 
 The API uses Drizzle on Postgres.
 
-- **No `DATABASE_URL` (local development, tests):** PGlite, a Postgres that runs inside the Node process. It starts from `server/seed.json` and lives in memory, so data resets when the API restarts. Set `PGLITE_DIR=.data` to keep it on disk.
+- **No `DATABASE_URL` (local development, tests):** PGlite, a Postgres that runs inside the Node process. It starts from `server/data/seed.json` and lives in memory, so data resets when the API restarts. Set `PGLITE_DIR=.data` to keep it on disk.
 - **`DATABASE_URL` set (production):** any Postgres through `pg`. The table is created on first start and filled with the demo orders when it is empty.
 
 ## Deploy (Vercel)
 
-Import the repository (Vite preset) and set `VITE_API_URL=/api`. `api/index.js` runs the Fastify app as a Vercel function, and `vercel.json` routes `/api/*` to it and everything else to `index.html`.
+Import the repository (Vite preset) and set `VITE_API_URL=/api`. `api/index.ts` runs the Fastify app as a Vercel function, and `vercel.json` routes `/api/*` to it and everything else to `index.html`.
 
 Add a Postgres database (for example Neon from the Vercel Marketplace) so orders persist: it sets `DATABASE_URL` for the project. Without it the API falls back to the in-memory database, which resets whenever the function restarts.

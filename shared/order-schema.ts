@@ -1,17 +1,17 @@
 import { z } from "zod";
 import { CATEGORIES, DEPARTMENTS, STATUSES } from "./catalog.js";
 
-// Date.parse accepts 2026-02-31 (it rolls over to March), so compare after a round trip.
-// Zod also runs this check on text that failed the format check, so it must never throw.
-function isRealDate(value) {
-    const parsed = new Date(`${value}T00:00:00Z`);
-    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-const required = (message) => z.string({ error: message }).trim().min(1, message);
+const required = (message: string) => z.string({ error: message }).trim().min(1, message);
 
 // Digits, optional dash and a check digit (number or K), or CF.
 const NIT = /^(CF|\d{1,12}-?[\dK])$/;
+
+// Date.parse accepts 2026-02-31 (it rolls over to March), so compare after a round trip.
+// Zod also runs this check on text that failed the format check, so it must never throw.
+function isRealDate(value: string): boolean {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
 
 // Fields a client sends to create or replace an order. Messages are shown in the UI as they are.
 export const orderInputSchema = z.object({
@@ -31,8 +31,8 @@ export const orderInputSchema = z.object({
     amount: z.number({ error: "Monto mayor que cero." }).gt(0, "Monto mayor que cero.").max(9_999_999_999.99, "Monto demasiado grande."),
 });
 
-// A replace may carry a status; without one the stored status is left alone, so editing a
-// stale copy of an order cannot undo a status change made elsewhere (e.g. on the board).
+// A replace may carry a status; without one the stored status is left alone, so editing a stale
+// copy of an order cannot undo a status change made elsewhere (e.g. on the board).
 export const orderReplaceSchema = orderInputSchema.extend({
     status: z.enum(STATUSES, { error: "Estado no válido." }).optional(),
 });
@@ -40,3 +40,8 @@ export const orderReplaceSchema = orderInputSchema.extend({
 export const statusChangeSchema = z.object({
     status: z.enum(STATUSES, { error: "Estado no válido." }),
 });
+
+// What a valid request body looks like after parsing (trimmed, uppercased, typed).
+export type OrderInput = z.output<typeof orderInputSchema>;
+export type OrderReplace = z.output<typeof orderReplaceSchema>;
+export type StatusChange = z.output<typeof statusChangeSchema>;

@@ -1,38 +1,30 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { sql } from "drizzle-orm";
+import { rowsOf, type Database } from "./Database.js";
 import { orders } from "./schema.js";
 
-const SEED_PATH = new URL("./seed.json", import.meta.url);
-
-// DATABASE_URL set  -> real Postgres (Neon, Supabase, local...) through node-postgres.
-// DATABASE_URL unset -> PGlite, a Postgres that runs inside the process: used for local
-//   development and tests. In memory by default; set PGLITE_DIR to keep it on disk.
-// Both go through the same Drizzle schema and queries.
-export async function createDb({ databaseUrl = process.env.DATABASE_URL, pgliteDir = process.env.PGLITE_DIR } = {}) {
-    let db;
-    if (databaseUrl) {
-        const { default: pg } = await import("pg");
-        const { drizzle } = await import("drizzle-orm/node-postgres");
-        db = drizzle({ client: new pg.Pool({ connectionString: databaseUrl, max: 1 }) });
-    } else {
-        const { PGlite } = await import("@electric-sql/pglite");
-        const { drizzle } = await import("drizzle-orm/pglite");
-        db = drizzle({ client: new PGlite(pgliteDir) });
-    }
-    await ensureSchema(db);
-    return db;
+// Next to the sources in development and tests. A bundler (such as the one behind a serverless
+// function) moves this module and breaks the relative path, so the project root is tried too.
+function seedPath(): URL {
+    const beside = new URL("../../../data/seed.json", import.meta.url);
+    const fromRoot = pathToFileURL(join(process.cwd(), "server/data/seed.json"));
+    return existsSync(beside) ? beside : fromRoot;
 }
 
 // Creates the table when it does not exist and loads the demo orders into it, only then:
 // deleting every order must not bring the demo data back on the next start.
 // The advisory lock makes several instances starting together (serverless cold starts)
 // take turns instead of racing on CREATE TABLE and on the seed.
-export async function ensureSchema(db) {
+export async function ensureSchema(db: Database): Promise<void> {
     await db.transaction(async (tx) => {
         await tx.execute(sql`SELECT pg_advisory_xact_lock(727001)`);
 
-        const { rows } = await tx.execute(sql`SELECT to_regclass('public.orders') IS NOT NULL AS exists`);
-        if (rows[0].exists) return;
+        const [{ exists } = { exists: false }] = rowsOf<{ exists: boolean }>(
+            await tx.execute(sql`SELECT to_regclass('public.orders') IS NOT NULL AS exists`)
+        );
+        if (exists) return;
 
         await tx.execute(sql`
             CREATE TABLE orders (
@@ -54,15 +46,15 @@ export async function ensureSchema(db) {
     });
 }
 
-async function loadSeed(db) {
-    const seed = JSON.parse(readFileSync(SEED_PATH, "utf8")).orders;
+async function loadSeed(db: Database): Promise<void> {
+    const seed = (JSON.parse(readFileSync(seedPath(), "utf8")) as { orders: (typeof orders.$inferInsert)[] }).orders;
     await db.insert(orders).values(seed);
     // The seed carries explicit ids, so move the sequence past them.
     await db.execute(sql`SELECT setval(pg_get_serial_sequence('orders', 'id'), (SELECT max(id) FROM orders))`);
 }
 
 // Back to the seed data with ids restarted. For tests: it wipes the table.
-export async function resetData(db) {
+export async function resetData(db: Database): Promise<void> {
     await db.execute(sql`TRUNCATE orders RESTART IDENTITY`);
     await loadSeed(db);
 }

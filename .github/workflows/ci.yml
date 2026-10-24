@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [lint, test, build]
+        script: [lint, typecheck, test, build]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
