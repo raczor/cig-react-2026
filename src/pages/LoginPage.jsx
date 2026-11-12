@@ -9,6 +9,7 @@ import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import { controlClass } from "../components/ui/styles.js";
 import { useAuth } from "../auth/auth-context.js";
+import { demoCredentials } from "../auth/client.js";
 
 const credentialsSchema = z.object({
     email: z.string().trim().min(1, "Correo obligatorio.").pipe(z.email("Correo no válido.")),
@@ -21,6 +22,7 @@ function LoginPage() {
     const location = useLocation();
     const [mode, setMode] = useState("signIn");
     const [notice, setNotice] = useState(null);
+    const [enteringDemo, setEnteringDemo] = useState(false);
 
     const {
         register,
@@ -45,6 +47,8 @@ function LoginPage() {
     }
 
     async function submit({ email, password }) {
+        // Enter in a field still submits while the demo sign-in runs; one sign-in at a time.
+        if (enteringDemo) return;
         setNotice(null);
         try {
             if (creating) {
@@ -62,6 +66,22 @@ function LoginPage() {
             setError("root.auth", { message: err.message });
         }
     }
+
+    // Signs in with the shared demo account (see auth/client.js).
+    async function enterDemo() {
+        setNotice(null);
+        clearErrors("root");
+        setEnteringDemo(true);
+        try {
+            await signIn(demoCredentials.email, demoCredentials.password);
+            navigate(destination, { replace: true });
+        } catch (err) {
+            setError("root.auth", { message: err.message });
+            setEnteringDemo(false);
+        }
+    }
+
+    const busy = isSubmitting || enteringDemo;
 
     const field = (name, options) => {
         const error = errors[name];
@@ -100,10 +120,21 @@ function LoginPage() {
                         />
                     </Field>
 
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full" disabled={busy}>
                         {isSubmitting ? "Un momento..." : creating ? "Crear cuenta" : "Entrar"}
                     </Button>
                 </form>
+
+                {demoCredentials && (
+                    <div className="mt-4 border-t border-slate-200 pt-4">
+                        <Button variant="secondary" className="w-full" disabled={busy} onClick={enterDemo}>
+                            {enteringDemo ? "Un momento..." : "Ver demo sin crear cuenta"}
+                        </Button>
+                        <p className="mt-2 text-center text-xs text-slate-500">
+                            Entra con una cuenta de demostración y datos de ejemplo.
+                        </p>
+                    </div>
+                )}
 
                 <p className="mt-4 text-center text-slate-600">
                     {creating ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}

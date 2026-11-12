@@ -8,9 +8,15 @@ import * as api from "../services/orders.js";
 import { makeOrder } from "../test/fixtures.js";
 import { renderWithProviders } from "../test/render.jsx";
 
+// The demo account is off unless a test turns it on.
+const demo = vi.hoisted(() => ({ credentials: null }));
+
 // Login on: the client module reports a Neon Auth URL and a fake client stands in for the service.
 vi.mock("./client.js", () => ({
     authEnabled: true,
+    get demoCredentials() {
+        return demo.credentials;
+    },
     authClient: {
         getSession: vi.fn(),
         signIn: { email: vi.fn() },
@@ -33,6 +39,7 @@ async function typeCredentials(user, email = "ana@example.com", password = "secr
 
 beforeEach(() => {
     vi.resetAllMocks();
+    demo.credentials = null;
     // AuthProvider logs failed auth calls for diagnosis; keep the test output readable.
     vi.spyOn(console, "error").mockImplementation(() => {});
     api.getOrders.mockResolvedValue([makeOrder({ id: 5, code: "OS-2026-005" })]);
@@ -188,6 +195,45 @@ describe("signing in", () => {
         await user.click(screen.getByRole("button", { name: "Entrar" }));
 
         expect(await screen.findByRole("button", { name: "Un momento..." })).toBeDisabled();
+    });
+});
+
+describe("demo access", () => {
+    beforeEach(() => {
+        demo.credentials = { email: "demo@example.com", password: "demo-pass-123" };
+    });
+
+    it("offers no demo button when no demo account is configured", async () => {
+        demo.credentials = null;
+        authClient.getSession.mockResolvedValue(signedOut);
+        renderWithProviders(<App />);
+
+        expect(await screen.findByRole("heading", { name: "Iniciar sesión" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Ver demo sin crear cuenta" })).not.toBeInTheDocument();
+    });
+
+    it("signs in with the shared demo account in one click", async () => {
+        authClient.getSession.mockResolvedValueOnce(signedOut).mockResolvedValue(signedIn);
+        authClient.signIn.email.mockResolvedValue({ data: {} });
+        const user = userEvent.setup();
+        renderWithProviders(<App />);
+
+        await user.click(await screen.findByRole("button", { name: "Ver demo sin crear cuenta" }));
+
+        expect(authClient.signIn.email).toHaveBeenCalledWith({ email: "demo@example.com", password: "demo-pass-123" });
+        expect(await screen.findByText("Orden OS-2026-005")).toBeInTheDocument();
+    });
+
+    it("explains a failed demo sign-in and leaves the form usable", async () => {
+        authClient.getSession.mockResolvedValue(signedOut);
+        authClient.signIn.email.mockResolvedValue({ error: { status: 401, code: "INVALID_EMAIL_OR_PASSWORD" } });
+        const user = userEvent.setup();
+        renderWithProviders(<App />);
+
+        await user.click(await screen.findByRole("button", { name: "Ver demo sin crear cuenta" }));
+
+        expect(await screen.findByRole("alert")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled();
     });
 });
 
